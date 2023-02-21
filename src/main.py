@@ -65,7 +65,7 @@ current_assignment_ros = MockROSCommunication('current_assignment_ros')
 vehi_state_ros.publish({"agent_state": initial_status})
 driving_operation_ros.publish({"CANCEL_DRIVING":False, "destination":None, "path_array":None})
 current_assignment_ros.publish({'id':None, 'status': None})
-position_sensor_ros.publish({ "x":Y0, "y":X0, "orientations":[ORIENTATION_0, 0], "sensors":{}})
+position_sensor_ros.publish({ "x":X0, "y":Y0, "orientations":[ORIENTATION_0, 0], "sensors":{}})
 
 
 
