@@ -1,124 +1,56 @@
 [
     {
-        "id": 1,
+        "id": 1024,
         "axles": [
             {
                 "id": 0,
                 "position": {
-                    "x": 1360,
+                    "x": 1120,
                     "y": 0
                 },
                 "steering": {
                     "axle_type": "forced",
-                    "max_steer_angle": 768,
+                    "max_steer_angle": 663,
                     "steering_reference": "remote"
                 },
-                "tire_width": 315,
+                "tire_width": 300,
                 "tire_diameter": 1044,
                 "wheel_positions": [
-                    1075,
-                    -1075
+                    1160,
+                    -1160
                 ]
             },
             {
                 "id": 1,
                 "position": {
-                    "x": 5160,
+                    "x": 6535,
                     "y": 0
                 },
                 "steering": {
-                    "axle_type": "fixed",
-                    "max_steer_angle": 0
+                    "axle_type": "fixed"
                 },
-                "tire_width": 315,
+                "tire_width": 300,
                 "tire_diameter": 1044,
                 "wheel_positions": [
-                    1075,
-                    -1075
+                    1160,
+                    1130,
+                    -1130,
+                    -1160
                 ]
             }
         ],
-        "width": 2550,
-        "height": 3600,
-        "length": 6150,
+        "width": 2600,
+        "height": 3950,
+        "length": 9935,
         "chassis_position": {
             "x": 0,
             "y": 0
         },
         "ground_clearance": 300,
         "rear_joint_position": {
-            "x": 4500,
+            "x": 9935,
             "y": 0
         },
         "max_front_joint_angle": 0
-    },
-    {
-        "id": 2,
-        "axles": [
-            {
-                "id": 0,
-                "position": {
-                    "x": 6540,
-                    "y": 0
-                },
-                "steering": {
-                    "axle_type": "friction",
-                    "max_steer_angle": 958
-                },
-                "tire_width": 315,
-                "tire_diameter": 1044,
-                "wheel_positions": [
-                    1025,
-                    -1025
-                ]
-            },
-            {
-                "id": 1,
-                "position": {
-                    "x": 7850,
-                    "y": 0
-                },
-                "steering": {
-                    "axle_type": "fixed",
-                    "max_steer_angle": 0
-                },
-                "tire_width": 315,
-                "tire_diameter": 1044,
-                "wheel_positions": [
-                    1025,
-                    -1025
-                ]
-            },
-            {
-                "id": 2,
-                "position": {
-                    "x": 9160,
-                    "y": 0
-                },
-                "steering": {
-                    "axle_type": "friction",
-                    "max_steer_angle": 958
-                },
-                "tire_width": 315,
-                "tire_diameter": 1044,
-                "wheel_positions": [
-                    1025,
-                    -1025
-                ]
-            }
-        ],
-        "width": 2550,
-        "height": 3600,
-        "length": 13750,
-        "chassis_position": {
-            "x": -1600,
-            "y": 0
-        },
-        "ground_clearance": 300,
-        "rear_joint_position": {
-            "x": 10000,
-            "y": 0
-        },
-        "max_front_joint_angle": 1571
     }
 ]
