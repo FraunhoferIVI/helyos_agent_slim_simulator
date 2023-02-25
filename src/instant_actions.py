@@ -33,7 +33,7 @@ def do_something_to_interrupt_assignment_operations(driving_operation_ros):
     driving_operation_ros.publish({"CANCEL_DRIVING":True})
 
 
-def cancel_assignm_callback(vehi_state_ros, agentConnector,  driving_operation_ros, ch, method, properties, inst_assignm_cancel):
+def cancel_assignm_callback(driving_operation_ros, agentConnector, ch, method, properties, inst_assignm_cancel):
     assignment_metadata = inst_assignm_cancel.assignment_metadata   
     
     if assignment_metadata.id == agentConnector.current_assignment.id:
