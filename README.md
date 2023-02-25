@@ -15,7 +15,7 @@ Or use a docker-compose as shown in `/example/docker-compose.yml`.
 ## Build
 
 ```
-docker build --no-cache -t helyos2020/helyos_agent_slim_simulator
+docker build --no-cache -t helyos2020/helyos_agent_slim_simulator .
 docker push helyos2020/helyos_agent_slim_simulator
 ```
 
