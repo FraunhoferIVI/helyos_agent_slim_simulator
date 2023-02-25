@@ -1,6 +1,6 @@
 # helyos_agent_slim_simulator
 
-It simulates agent in helyOS framework. It can be used for front-end development or to test path planning algorithms.
+It simulates an agent in helyOS framework. It can be used for front-end development or to test path planning algorithms.
 
 ## Getting started
 
@@ -48,26 +48,43 @@ The simulator is configured by the environment variables:
 | REGISTRATION_TOKEN | Allow agent to check in even if not registered in helyOS |
 | NAME | Agent name |
 | --- | --- |
-| X0 | Initial horizontal position (arb. unit)|
-| Y0 | Initial vertical position (arb. unit)|
+| PATH_TRACKER |  perfect (arb. unit), stanley (mm), straight_to_destination(arb.unit)|
+| ASSIGNMENT_FORMAT | fixed, trajectory, destination, trucktrix-path |
+| VEHICLE_PARTS | Number of parts. eg. truck with trailer: 2 |
+| --- | --- |
+| X0 | Initial horizontal position (arb. unit, dep. PATH_TRACKER)|
+| Y0 | Initial vertical position (arb. unit, dep. PATH_TRACKER)|
 | ORIENTATION | Initial orientation in mrads |
 | VELOCITY | Driving velocity 0 to 10. (arb. unit) |
-| PATH_ALGORITHM | fixed, trajectory, straight_to_destination,  (default:autotruck-path)|
 | --- | --- |
 | RABBITMQHOST | HelyOS RabbitMQ Server  |
 | RABBITMPORT | HelyOS RabbitMQ Port (default:5672)  |
 | RBMQ_USERNAME | Agent RabbitMQ account name (optional) |
 | RBMQ_PASSWORD | Agent RabbitMQ account password (optional)  |
 
+Optional environmnet variable for the `stanley` path tracker:
+
+| VARIABLE | DESCRIPTION |
+| --- | --- |
+| STANLEY_K | control gain (default: 1) |
+| STANLEY_KP | speed proportional gain (default: 0.5)|
+| STANLEY_L |  Wheel base of vehicle length (m) (default: 2.9) |
+| STANLEY_MAXSTEER | (rad) max steering angle (default: 12)|
+| --- | --- |
+
+Ref:
+    - [Stanley: The robot that won the DARPA grand challenge](http://isl.ecst.csuchico.edu/DOCS/darpa2005/DARPA%202005%20Stanley.pdf)
+    - [Autonomous Automobile Path Tracking](https://www.ri.cmu.edu/pub_files/2009/2/Automatic_Steering_Methods_for_Autonomous_Automobile_Path_Tracking.pdf)
 
 
 ## Test and Deploy
 
 ***
 
-### Author
+### Authors
 
 *   Carlos E. Viol Barbosa
+*
 
 
 
