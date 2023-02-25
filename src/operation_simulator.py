@@ -2,34 +2,54 @@
 
 import time, math, random, os
 from helyos_agent_sdk.models import AGENT_STATE, ASSIGNMENT_STATUS
-from utils.path_followers import straight_path_to_destination
-from utils.trajectory_format_convertors import convert_autotruck_path_to_trajectory 
+from utils.path_followers import stanley_path_follower, straight_path_to_destination
+from utils.data_format_convertors import convert_autotruck_path_to_trajectory, get_destination_from_assignment
 
 
 # Thread-safe messaging mechanism using MockROSCommunication
 # driving_operation_ros, position_sensor_ros, vehi_state_ros, current_assignment_ros
 
 VELOCITY = float(os.environ.get('VELOCITY', 2.8)) # 2.8m/s ~ 10 kM/hour
+PATH_TRACKER = os.environ.get('PATH_TRACKER', 'perfect')
 
 
-def assignment_execution_local_simulator(inst_assignment_msg, path_algorithm,
+def path_tracking(pose0, target_trajectory):
+    if PATH_TRACKER == "perfect":
+        actual_trajectory = target_trajectory
+    if PATH_TRACKER == 'stanley':
+        actual_trajectory = stanley_path_follower(pose0, target_trajectory)
+
+    return actual_trajectory
+
+
+
+
+def assignment_execution_local_simulator(inst_assignment_msg, ASSIGNMENT_FORMAT,
                                          current_assignment_ros, 
                                          vehi_state_ros, position_sensor_ros, driving_operation_ros):
     """ Assignment simulator wrapper """
     
     assignment_metadata = inst_assignment_msg.assignment_metadata
     assignment_body = inst_assignment_msg.body
-    destination = None
+    pose0 = position_sensor_ros.read()
     
-    if 'destination' in assignment_body:
-        destination = assignment_body.get('destination', None)
-    else:
-        xf = assignment_body.get('x', None)
-        yf = assignment_body.get('y', None)
-        orientationsf = assignment_body.get('orientations', [0,0])
-        if xf and yf: destination = {'x': xf, 'y': yf, 'orientations': orientationsf}
-    
-    trajectory = assignment_body.get('trajectory', None)
+    if ASSIGNMENT_FORMAT == "autotruck-path" or ASSIGNMENT_FORMAT == "trucktrix-path":
+        target_trajectory = convert_autotruck_path_to_trajectory(autotruck_path=assignment_body)    
+
+    if ASSIGNMENT_FORMAT == "trajectory":
+        target_trajectory = assignment_body.get('trajectory', None)
+
+    if ASSIGNMENT_FORMAT == "destination":
+        #  It  drives a straight path to destination.
+        destination = get_destination_from_assignment(assignment_body)
+        target_trajectory = straight_path_to_destination(pose0, destination)
+
+    if ASSIGNMENT_FORMAT == "fixed":
+        #  It ignores the path and destination and always drives a fixed path.
+        destination = pose0; destination['x'] = pose0['x'] + 10000 
+        trajectory = straight_path_to_destination(pose0, destination)
+
+    trajectory = path_tracking(pose0, target_trajectory)
 
     try:
         current_assignment_ros.publish({'id':assignment_metadata.id, 'status':ASSIGNMENT_STATUS.EXECUTING})
@@ -37,28 +57,7 @@ def assignment_execution_local_simulator(inst_assignment_msg, path_algorithm,
 
         print(" <= assignment is executing")
 
-        
-        if path_algorithm == "trajectory":
-            #  It follows a trajectory.
-            operation_finished = drive_ivi_stepped(driving_operation_ros, position_sensor_ros, trajectory)
-
-        if path_algorithm == "straight_to_destination":
-            #  It  drives a straight path to destination.
-            pose0 = position_sensor_ros.read()
-            trajectory = straight_path_to_destination(pose0, destination)
-            operation_finished = drive_ivi_stepped(driving_operation_ros, position_sensor_ros, trajectory)     
-        
-        if path_algorithm == "fixed":
-            #  It ignores the path and destination and always drives a fixed path.
-            pose0 = position_sensor_ros.read()
-            destination = pose0; destination['x'] = pose0['x'] + 10000 
-            trajectory = straight_path_to_destination(pose0, destination)
-            operation_finished = drive_ivi_stepped(driving_operation_ros, position_sensor_ros, trajectory)     
-
-        if path_algorithm == "autotruck-path" or path_algorithm == "trucktrix-path":
-            #  It follows an autotruck-path.
-            trajectory = convert_autotruck_path_to_trajectory(autotruck_path=assignment_body)
-            operation_finished = drive_ivi_stepped(driving_operation_ros, position_sensor_ros, trajectory)
+        operation_finished = drive_ivi_stepped(driving_operation_ros, position_sensor_ros, trajectory)
 
         if operation_finished:
             
@@ -94,10 +93,15 @@ def drive_ivi_stepped(driving_operation_ros, position_sensor_ros, trajectory):
     """
     FORCE_FAIL_SIMULATOR = False
 
-    for d in range(0, len(trajectory), 1):
+    print("========= driving stepped trajectory =========")
+    print(trajectory)
+    num_steps = len(trajectory)
+
+    for d in range(0,num_steps, 1):
         x = trajectory[d]['x']
         y = trajectory[d]['y']
         orientations = trajectory[d]['orientations']
+        
 
         try:
             STOP_SIMULATOR = driving_operation_ros.read().get("CANCEL_DRIVING", False)
@@ -134,8 +138,8 @@ def drive_ivi_stepped(driving_operation_ros, position_sensor_ros, trajectory):
             else:
                 time.sleep(1)
 
-            print("driven steps")
-            print("<= publish sensor", f"{d}%")   
+            if not int((d/num_steps)*100) % 10:
+                print("driven steps:", d)
 
 
         except  Exception as e:
