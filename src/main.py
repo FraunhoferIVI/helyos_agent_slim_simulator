@@ -12,7 +12,7 @@ from operation_simulator import assignment_execution_local_simulator
 RABBITMQ_HOST = os.environ.get('RABBITMQ_HOST', 'local_message_broker')
 RABBITMQ_PORT = os.environ.get('RABBITMQ_PORT', '5672')
 VEHICLE_NAME = os.environ.get('NAME', '')
-ASSIGNMENT_FORMAT = os.environ.get('ASSIGNMENT_FORMAT', 'autotruck-path')
+ASSIGNMENT_FORMAT = os.environ.get('ASSIGNMENT_FORMAT', 'trajectory')
 PATH_TRACKER = os.environ.get('PATH_TRACKER', 'perfect')
 UUID = os.environ.get('UUID', "Bb34069fc5-fdgs-434b-b87e-f19c5435113")
 YARD_UID = os.environ.get('YARD_UID', "1")

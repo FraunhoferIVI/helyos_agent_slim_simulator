@@ -19,12 +19,12 @@ services:
         environment:
 
             # AGENT ID
-            - UUID=Bb34069fc5-fdgs-434b-b87e-f19c5435113 
+            - UUID=Bb3402-9fc5-fdgs-434b-b87e-f19c5435113 
             - PATH_TRACKER=perfect  # perfect | straight_to_destination | stanley
             - ASSIGNMENT_FORMAT=autotruck-path  # fixed | trajectory | destination | autotruck-path |
             - NAME='MY TRUCK'
             - X0=0
-            - Y0=0
+            - Y0=-50000
             - ORIENTATION=0
             - VELOCITY=1.8 
             - VEHICLE_PARTS=2
@@ -48,7 +48,7 @@ services:
 
 networks:
     control-tower-net:
-        name: api-network
+        name: control-tower-net
         external: true
 
 
