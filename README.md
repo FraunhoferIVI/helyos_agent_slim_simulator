@@ -47,6 +47,7 @@ The simulator is configured by the environment variables:
 | UUID | String with unique identifcation code of agent |
 | REGISTRATION_TOKEN | Allow agent to check in even if not registered in helyOS |
 | NAME | Agent name |
+| YARD_UID | Yard identifier |
 | --- | --- |
 | PATH_TRACKER |  perfect (arb. unit), stanley (mm), straight_to_destination(arb.unit)|
 | ASSIGNMENT_FORMAT | fixed, trajectory, destination, trucktrix-path |
@@ -57,8 +58,8 @@ The simulator is configured by the environment variables:
 | ORIENTATION | Initial orientation in mrads |
 | VELOCITY | Driving velocity 0 to 10. (arb. unit) |
 | --- | --- |
-| RABBITMQHOST | HelyOS RabbitMQ Server  |
-| RABBITMPORT | HelyOS RabbitMQ Port (default:5672)  |
+| RABBITMQ_HOST | HelyOS RabbitMQ Server  |
+| RABBITMQ_PORT | HelyOS RabbitMQ Port (default:5672)  |
 | RBMQ_USERNAME | Agent RabbitMQ account name (optional) |
 | RBMQ_PASSWORD | Agent RabbitMQ account password (optional)  |
 

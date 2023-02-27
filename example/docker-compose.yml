@@ -28,11 +28,12 @@ services:
             - ORIENTATION=0
             - VELOCITY=1.8 
             - VEHICLE_PARTS=2
+            - YARD_UID=1
 
             # RABBITMQ 
             - ENCRYPT=none  # none | agent | helyos | helyos-agent
-            - RABBITMQHOST=local_message_broker # local_message_broker | rabbitmq.ivi.fraunhofer.de 
-            - RABBITMQPORT=5672
+            - RABBITMQ_HOST=local_message_broker # local_message_broker | rabbitmq.ivi.fraunhofer.de 
+            - RABBITMQ_PORT=5672
 
             # RBMQ ACCOUNT
             - RBMQ_USERNAME=${HELYOS_RBMQ_USERNAME}
