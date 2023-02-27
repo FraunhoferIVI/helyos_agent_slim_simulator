@@ -23,6 +23,7 @@ GEOMETRY_FORMAT = os.environ.get('GEOMETRY_FORMAT', "trucktrix-vehicle")
 GEOMETRY_FILENAME = os.environ.get('GEOMETRY_FILENAME', "geometry.json")
 AGENT_OPERATIONS =  os.environ.get('AGENT_OPERATIONS', "drive,")
 VEHICLE_PARTS =  int(os.environ.get('VEHICLE_PARTS', 1))
+CHECKIN_MAX_ATTEMPTS = int(os.environ.get('CHECKIN_MAX_ATTEMPTS', '5'))
 
 try:
     with open(GEOMETRY_FILENAME) as f:
@@ -51,10 +52,21 @@ resources = AgentCurrentResources(operation_types_available=operations, work_pro
 assignment = AssignmentCurrentStatus(id=None, status=None, result={})
 
 helyOS_client = HelyOSClient(RABBITMQ_HOST, RABBITMQ_PORT, uuid=UUID)
-helyOS_client.perform_checkin(yard_uid=YARD_UID, agent_data=agent_data, status=initial_status.value)
-helyOS_client.get_checkin_result()         
+attempts = 0; helyos_excep = None
+while attempts < CHECKIN_MAX_ATTEMPTS:
+    try:
+        print(f"Check in, attempt {attempts+1} ...")
+        helyOS_client.perform_checkin(yard_uid=YARD_UID, agent_data=agent_data, status=initial_status.value)
+        break
+    except Exception as e:
+        attempts += 1
+        helyos_excep = e
+        time.sleep(2)
+if attempts == CHECKIN_MAX_ATTEMPTS:
+    raise helyos_excep
 
-print("\n checkin_data:", helyOS_client.checkin_data)
+helyOS_client.get_checkin_result()         
+print("\n checkin_data:", helyOS_client.checkin_data['map']['origin'])
 agentConnector = AgentConnector(helyOS_client)
 agentConnector.publish_state(initial_status, resources, assignment_status=assignment)
 

@@ -94,7 +94,6 @@ def drive_ivi_stepped(driving_operation_ros, position_sensor_ros, trajectory):
     FORCE_FAIL_SIMULATOR = False
 
     print("========= driving stepped trajectory =========")
-    print(trajectory)
     num_steps = len(trajectory)
 
     for d in range(0,num_steps, 1):
@@ -138,8 +137,8 @@ def drive_ivi_stepped(driving_operation_ros, position_sensor_ros, trajectory):
             else:
                 time.sleep(1)
 
-            if not int((d/num_steps)*100) % 10:
-                print("driven steps:", d)
+            if not int((d/num_steps)*1000) % 100:
+                print("driven steps:", f"{d}/{num_steps}")
 
 
         except  Exception as e:
