@@ -120,7 +120,7 @@ def drive_ivi_stepped(driving_operation_ros, position_sensor_ros, trajectory):
                                              'maximum': num_steps},
                         },
                         'temperatures':{
-                                        'sensor_1': {
+                                        'sensor_t1': {
                                             'title':"cabine",
                                             'type' :"number",
                                             'value':random.randint(20,40),

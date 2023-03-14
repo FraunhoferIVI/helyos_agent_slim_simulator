@@ -61,7 +61,7 @@ def my_other_callback(position_sensor_ros, ch, method, properties, received_str)
         if command['body'] == "tail lift up":  value = 'up'
 
         sensor_patch = {   'actuators':{
-                                    'sensor_1': {
+                                    'sensor_act1': {
                                         'title':"Tail Lift",
                                         'type' :"string",
                                         'value': value,
@@ -74,7 +74,7 @@ def my_other_callback(position_sensor_ros, ch, method, properties, received_str)
         if command['body'] == "headlight off":  value = 'off'
 
         sensor_patch = {   'lights':{
-                                    'sensor_hl': {
+                                    'sensor_hl1': {
                                         'title':"Headlight",
                                         'type' :"string",
                                         'value': value,

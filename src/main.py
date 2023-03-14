@@ -55,14 +55,14 @@ initial_sensor =  {    'helyos_agent_control':{
                                              'maximum': 1},
                         },
                         'temperatures':{
-                                        'sensor_1': {
+                                        'sensor_t1': {
                                             'title':"cabine",
                                             'type' :"number",
                                             'value': 30,
                                             'unit': "oC"}
                         },                
                         'actuators':{
-                                    'sensor_1': {
+                                    'sensor_act1': {
                                         'title':"Tail Lift",
                                         'type' :"string",
                                         'value': 'up',
