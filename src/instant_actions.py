@@ -1,5 +1,6 @@
 
 
+import json
 from helyos_agent_sdk.models import AssignmentCurrentStatus, AGENT_STATE, AgentCurrentResources, ASSIGNMENT_STATUS
 
 
@@ -44,5 +45,45 @@ def cancel_assignm_callback(driving_operation_ros, agentConnector, ch, method, p
 
 
 
-def my_other_callback(ch, method, properties, received_str, agentConnector):
+def my_other_callback(position_sensor_ros, ch, method, properties, received_str):
     print("not helyos-related instant action", received_str)
+    try: 
+        message = json.loads(received_str)['message']
+        print(message)
+        command =  json.loads(message) 
+    except:
+        print('\nAgent does not know how interpret the command:', received_str[0:50])
+        return
+    sensor_patch = {}
+    
+    if "tail lift" in command['body']:     
+        if command['body'] == "tail lift down": value = 'down'
+        if command['body'] == "tail lift up":  value = 'up'
+
+        sensor_patch = {   'actuators':{
+                                    'sensor_1': {
+                                        'title':"Tail Lift",
+                                        'type' :"string",
+                                        'value': value,
+                                        'unit': ""}
+                                     }
+                      } 
+
+    if "headlight" in command['body']:     
+        if command['body'] == "headlight on": value = 'on'
+        if command['body'] == "headlight off":  value = 'off'
+
+        sensor_patch = {   'lights':{
+                                    'sensor_hl': {
+                                        'title':"Headlight",
+                                        'type' :"string",
+                                        'value': value,
+                                        'unit': ""}
+                                     }
+                      } 
+
+        
+    agent_data = position_sensor_ros.read()    
+    sensors = {**agent_data['sensors'], **sensor_patch}
+    agent_data['sensors'] = sensors
+    position_sensor_ros.publish(agent_data)    

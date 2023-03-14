@@ -46,6 +46,31 @@ agent_data = {
          }
 
 
+initial_sensor =  {    'helyos_agent_control':{
+                                        'current_task_progress':{
+                                            'title':'Progress of drive operation',
+                                            'type': 'number',
+                                             'value':0,
+                                             'unit':'',
+                                             'maximum': 1},
+                        },
+                        'temperatures':{
+                                        'sensor_1': {
+                                            'title':"cabine",
+                                            'type' :"number",
+                                            'value': 30,
+                                            'unit': "oC"}
+                        },                
+                        'actuators':{
+                                    'sensor_1': {
+                                        'title':"Tail Lift",
+                                        'type' :"string",
+                                        'value': 'up',
+                                        'unit': ""}
+                        },
+                        
+            }   
+
 initial_status = AGENT_STATE.FREE
 operations = AGENT_OPERATIONS.split(',')
 resources = AgentCurrentResources(operation_types_available=operations, work_process_id=None, reserved=False)
@@ -83,7 +108,7 @@ current_assignment_ros = MockROSCommunication('current_assignment_ros')
 vehi_state_ros.publish({"agent_state": initial_status})
 driving_operation_ros.publish({"CANCEL_DRIVING":False, "destination":None, "path_array":None})
 current_assignment_ros.publish({'id':None, 'status': None})
-position_sensor_ros.publish({ "x":X0, "y":Y0, "orientations":initial_orientations, "sensors":{}})
+position_sensor_ros.publish({ "x":X0, "y":Y0, "orientations":initial_orientations, "sensors":initial_sensor})
 
 
 
@@ -110,7 +135,7 @@ position_thread.start()
 def my_reserve_callback(*args): return reserve_callback(vehi_state_ros, agentConnector, *args)
 def my_release_callback(*args): return release_callback(vehi_state_ros, agentConnector, *args )
 def my_cancel_assignm_callback(*args): return cancel_assignm_callback(driving_operation_ros, agentConnector, *args )
-def my_any_other_instant_action_callback(*args): return my_other_callback(agentConnector, *args)
+def my_any_other_instant_action_callback(*args): return my_other_callback(position_sensor_ros, *args)
 
 agentConnector.consume_instant_action_messages(my_reserve_callback, my_release_callback, my_cancel_assignm_callback, my_any_other_instant_action_callback)
 

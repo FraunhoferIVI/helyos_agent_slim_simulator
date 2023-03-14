@@ -111,20 +111,31 @@ def drive_ivi_stepped(driving_operation_ros, position_sensor_ros, trajectory):
 
             if FORCE_FAIL_SIMULATOR: raise "error"
 
-            sensors = { 'helyos_agent_control':{},
+            sensor_patch = { 'helyos_agent_control':{
+                                        'current_task_progress':{
+                                            'title':'Progress of drive operation',
+                                            'type': 'number',
+                                             'value': d+1,
+                                             'unit':'',
+                                             'maximum': num_steps},
+                        },
                         'temperatures':{
                                         'sensor_1': {
                                             'title':"cabine",
                                             'type' :"number",
                                             'value':random.randint(20,40),
                                             'unit': "oC"}
-                                         }
-                      }    
+                                         },
+                      }   
+            
 
-            position_sensor_ros.publish({"x":x, "y":y, "z":0, "orientations":orientations, "sensors":sensors})
+             
+            agent_data = position_sensor_ros.read()    
+            sensors = {**agent_data['sensors'], **sensor_patch}
+            new_agent_data = {"x":x, "y":y, "z":0, "orientations":orientations, "sensors": sensors }
+            position_sensor_ros.publish(new_agent_data)    
 
-
-            if d<len(trajectory)-1:
+            if d < (num_steps-1):
                 t0 = trajectory[d]['time']; t1 = trajectory[d+1]['time']
                 if t0 is not None and t1 is not None:
                     dt = t1 - t0
