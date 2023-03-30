@@ -32,7 +32,7 @@ def release_callback(vehi_state_ros, agentConnector, ch, method, properties, req
 
 def do_something_to_interrupt_assignment_operations(driving_operation_ros):
     operation_commands = driving_operation_ros.read()
-    driving_operation_ros.publish({**operation_commands, 'CANCEL_DRIVING': True})
+    driving_operation_ros.publish({**operation_commands, 'CANCEL_DRIVING': True, 'PAUSE_ASSIGNMENT': False})
 
 
 def cancel_assignm_callback(driving_operation_ros, agentConnector, ch, method, properties, inst_assignm_cancel):
@@ -64,9 +64,25 @@ def my_other_callback(position_sensor_ros, driving_operation_ros, ch, method, pr
     
     if "pause" == command['body']:     
         driving_operation_ros.publish({**operation_commands, 'PAUSE_ASSIGNMENT': True})
-    
-    if "resume" == command['body']:     
+        sensor_patch = {  'instant_actions_response':{
+                            'task_control':{
+                                    'title':'Task status',
+                                    'type': 'string',
+                                        'value':'paused',
+                                        'unit':''},
+                        }
+                }    
+
+    if "resume" == command['body']:                                                
         driving_operation_ros.publish({**operation_commands, 'PAUSE_ASSIGNMENT': False})
+        sensor_patch = {  'instant_actions_response':{
+                                    'task_control':{
+                                            'title':'Task status',
+                                            'type': 'string',
+                                             'value':'normal',
+                                             'unit':''},
+                                }
+                        }     
 
     
     if "tail lift" in command['body']:     

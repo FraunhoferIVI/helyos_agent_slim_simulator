@@ -119,11 +119,6 @@ def drive_ivi_stepped(driving_operation_ros, position_sensor_ros, trajectory):
                                              'value': d+1,
                                              'unit':'',
                                              'maximum': num_steps},
-                                        'task_control':{
-                                            'title':'Task state',
-                                            'type': 'string',
-                                             'value': 'paused' if PAUSE_SIMULATOR else 'normal',
-                                             'unit':''},
                         },
                         'temperatures':{
                                         'sensor_t1': {
@@ -141,7 +136,6 @@ def drive_ivi_stepped(driving_operation_ros, position_sensor_ros, trajectory):
 
             while PAUSE_SIMULATOR:
                 time.sleep(1)
-                new_agent_data = {"x":x, "y":y, "z":0, "orientations":orientations, "sensors": sensors }
                 position_sensor_ros.publish(new_agent_data) 
                 PAUSE_SIMULATOR = driving_operation_ros.read().get("PAUSE_ASSIGNMENT", False)
 

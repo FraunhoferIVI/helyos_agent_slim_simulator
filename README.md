@@ -15,8 +15,8 @@ Or use a docker-compose as shown in `/example/docker-compose.yml`.
 ## Build
 
 ```
-docker build --no-cache -t helyos2020/helyos_agent_slim_simulator .
-docker push helyos2020/helyos_agent_slim_simulator
+docker build --no-cache -t helyosframework/helyos_agent_slim_simulator .
+docker push helyosframework/helyos_agent_slim_simulator
 ```
 
 ## Assignment data formats
@@ -36,7 +36,13 @@ assignment = { "destination": {"x": float, "y": float, "orientations":List[float
 https://app.swaggerhub.com/apis-docs/helyOS/Tructrix_API/4.0#/TrucktrixTrajectory
 
 
+## Instant actions
+Besides the helyOS-required instant actions (mission reserve, mission release and cancel),
+we have implemented additional instant actions triggered by the following strings:
 
+* "pause" or "resume" : pause/resume a running assignment.
+* "tail lift up" or "tail lift down": change the value of the tail lift sensor.
+* "headlight on" or "headlight off": change the value of the tail lift sensor.
 
 ## Settings
 
