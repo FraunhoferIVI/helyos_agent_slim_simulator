@@ -31,7 +31,8 @@ def release_callback(vehi_state_ros, agentConnector, ch, method, properties, req
 
 
 def do_something_to_interrupt_assignment_operations(driving_operation_ros):
-    driving_operation_ros.publish({"CANCEL_DRIVING":True})
+    operation_commands = driving_operation_ros.read()
+    driving_operation_ros.publish({**operation_commands, 'CANCEL_DRIVING': True})
 
 
 def cancel_assignm_callback(driving_operation_ros, agentConnector, ch, method, properties, inst_assignm_cancel):
@@ -45,8 +46,11 @@ def cancel_assignm_callback(driving_operation_ros, agentConnector, ch, method, p
 
 
 
-def my_other_callback(position_sensor_ros, ch, method, properties, received_str):
+def my_other_callback(position_sensor_ros, driving_operation_ros, ch, method, properties, received_str):
     print("not helyos-related instant action", received_str)
+    agent_data = position_sensor_ros.read()    
+    operation_commands = driving_operation_ros.read()
+
     try: 
         message = json.loads(received_str)['message']
         print(message)
@@ -54,7 +58,16 @@ def my_other_callback(position_sensor_ros, ch, method, properties, received_str)
     except:
         print('\nAgent does not know how interpret the command:', received_str[0:50])
         return
+    
     sensor_patch = {}
+
+    
+    if "pause" == command['body']:     
+        driving_operation_ros.publish({**operation_commands, 'PAUSE_ASSIGNMENT': True})
+    
+    if "resume" == command['body']:     
+        driving_operation_ros.publish({**operation_commands, 'PAUSE_ASSIGNMENT': False})
+
     
     if "tail lift" in command['body']:     
         if command['body'] == "tail lift down": value = 'down'
@@ -83,7 +96,6 @@ def my_other_callback(position_sensor_ros, ch, method, properties, received_str)
                       } 
 
         
-    agent_data = position_sensor_ros.read()    
     sensors = {**agent_data['sensors'], **sensor_patch}
     agent_data['sensors'] = sensors
     position_sensor_ros.publish(agent_data)    

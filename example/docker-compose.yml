@@ -10,8 +10,8 @@ services:
 
 
     agent_simulator:
-        image: helyos2020/helyos_agent_slim_simulator:0.2.2
-        # build: ../
+        # image: helyosframework/helyos_agent_slim_simulator:0.3.0
+        build: ../
 
         volumes:
             - ./custom-geometry.json:/app/geometry.json
@@ -49,7 +49,7 @@ services:
 
 networks:
     control-tower-net:
-        name: control-tower-net
+        name: api-network
         external: true
 
 

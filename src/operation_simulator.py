@@ -91,8 +91,6 @@ def drive_ivi_stepped(driving_operation_ros, position_sensor_ros, trajectory):
     """  Vehicle simple simulator to be used for the assignment execution.
          It folows the IVI-step data format used by the trucktrix planner.
     """
-    FORCE_FAIL_SIMULATOR = False
-
     print("========= driving stepped trajectory =========")
     num_steps = len(trajectory)
 
@@ -104,8 +102,11 @@ def drive_ivi_stepped(driving_operation_ros, position_sensor_ros, trajectory):
 
         try:
             STOP_SIMULATOR = driving_operation_ros.read().get("CANCEL_DRIVING", False)
+            FORCE_FAIL_SIMULATOR = driving_operation_ros.read().get("FORCE_FAIL_SIMULATOR", False)
+            PAUSE_SIMULATOR = driving_operation_ros.read().get("PAUSE_ASSIGNMENT", False)
+
             if STOP_SIMULATOR:
-                print("CANCEL_DRIVING", STOP_SIMULATOR)
+                print("CANCEL_DRIVING")
                 driving_operation_ros.publish({"CANCEL_DRIVING":False})
                 return False
 
@@ -118,6 +119,11 @@ def drive_ivi_stepped(driving_operation_ros, position_sensor_ros, trajectory):
                                              'value': d+1,
                                              'unit':'',
                                              'maximum': num_steps},
+                                        'task_control':{
+                                            'title':'Task state',
+                                            'type': 'string',
+                                             'value': 'paused' if PAUSE_SIMULATOR else 'normal',
+                                             'unit':''},
                         },
                         'temperatures':{
                                         'sensor_t1': {
@@ -128,12 +134,16 @@ def drive_ivi_stepped(driving_operation_ros, position_sensor_ros, trajectory):
                                          },
                       }   
             
-
-             
             agent_data = position_sensor_ros.read()    
-            sensors = {**agent_data['sensors'], **sensor_patch}
+            sensors = {**agent_data['sensors'], **sensor_patch}   
             new_agent_data = {"x":x, "y":y, "z":0, "orientations":orientations, "sensors": sensors }
             position_sensor_ros.publish(new_agent_data)    
+
+            while PAUSE_SIMULATOR:
+                time.sleep(1)
+                new_agent_data = {"x":x, "y":y, "z":0, "orientations":orientations, "sensors": sensors }
+                position_sensor_ros.publish(new_agent_data) 
+                PAUSE_SIMULATOR = driving_operation_ros.read().get("PAUSE_ASSIGNMENT", False)
 
             if d < (num_steps-1):
                 t0 = trajectory[d]['time']; t1 = trajectory[d+1]['time']

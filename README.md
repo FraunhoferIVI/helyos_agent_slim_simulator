@@ -1,12 +1,12 @@
 # helyos_agent_slim_simulator
 
-It simulates an agent in helyOS framework. It can be used for front-end development or to test path planning algorithms.
+It simulates an agent in the helyOS framework. It can be used for front-end development or for testing path planning algorithms.
 
 ## Getting started
 
 Run with the default settings:
 ```
-docker run agent_helyos_slim_simulator
+docker run helyosframework/agent_helyos_slim_simulator
 ```
 
 Or use a docker-compose as shown in `/example/docker-compose.yml`.
