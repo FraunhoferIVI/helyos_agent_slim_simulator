@@ -31,7 +31,7 @@ assignment = { "trajectory": [{"x": float, "y": float, "orientations":List[float
 assignment = { "destination": {"x": float, "y": float, "orientations":List[float]}  }
 ```
 
-### AutoTruck or TruckTrix path format
+### AutoTruck-TruckTrix path format
 
 https://app.swaggerhub.com/apis-docs/helyOS/Tructrix_API/4.0#/TrucktrixTrajectory
 
@@ -50,7 +50,7 @@ The simulator is configured by the environment variables:
 
 | VARIABLE | DESCRIPTION |
 | --- | --- |
-| UUID | String with unique identifcation code of agent |
+| UUID | String with unique identifcation code of agent (use "RANDOM_UUID" for auto-generated uuids) |
 | REGISTRATION_TOKEN | Allow agent to check in even if not registered in helyOS |
 | NAME | Agent name |
 | YARD_UID | Yard identifier |

@@ -6,7 +6,7 @@ from helyos_agent_sdk.models import AssignmentCurrentStatus, AGENT_STATE, AgentC
 from utils.MockROSCommunication import MockROSCommunication
 from instant_actions import cancel_assignm_callback, my_other_callback, release_callback, reserve_callback
 from operation_simulator import assignment_execution_local_simulator
-
+import uuid
 
 # CONSTANTS
 RABBITMQ_HOST = os.environ.get('RABBITMQ_HOST', 'local_message_broker')
@@ -14,7 +14,7 @@ RABBITMQ_PORT = os.environ.get('RABBITMQ_PORT', '5672')
 VEHICLE_NAME = os.environ.get('NAME', '')
 ASSIGNMENT_FORMAT = os.environ.get('ASSIGNMENT_FORMAT', 'trajectory')
 PATH_TRACKER = os.environ.get('PATH_TRACKER', 'perfect')
-UUID = os.environ.get('UUID', "Bb34069fc5-fdgs-434b-b87e-f19c5435113")
+UUID = os.environ.get('UUID', "RANDOM_UUID")
 YARD_UID = os.environ.get('YARD_UID', "1")
 X0 = float(os.environ.get('X0', 0))
 Y0 = float(os.environ.get('Y0', 0))
@@ -24,6 +24,11 @@ GEOMETRY_FILENAME = os.environ.get('GEOMETRY_FILENAME', "geometry.json")
 AGENT_OPERATIONS =  os.environ.get('AGENT_OPERATIONS', "drive,")
 VEHICLE_PARTS =  int(os.environ.get('VEHICLE_PARTS', 1))
 CHECKIN_MAX_ATTEMPTS = int(os.environ.get('CHECKIN_MAX_ATTEMPTS', '5'))
+RBMQ_USERNAME = os.environ.get('RBMQ_USERNAME', None)
+RBMQ_PASSWORD = os.environ.get('RBMQ_PASSWORD', None)
+
+if UUID == "RANDOM_UUID":
+    UUID = str(uuid.uuid1())
 
 try:
     with open(GEOMETRY_FILENAME) as f:
@@ -80,6 +85,9 @@ helyOS_client = HelyOSClient(RABBITMQ_HOST, RABBITMQ_PORT, uuid=UUID)
 attempts = 0; helyos_excep = None
 while attempts < CHECKIN_MAX_ATTEMPTS:
     try:
+        if RBMQ_USERNAME and RBMQ_PASSWORD:
+            helyOS_client.connect_rabbitmq(RBMQ_USERNAME, RBMQ_PASSWORD)
+
         print(f"Check in, attempt {attempts+1} ...")
         helyOS_client.perform_checkin(yard_uid=YARD_UID, agent_data=agent_data, status=initial_status.value)
         break
@@ -114,12 +122,13 @@ position_sensor_ros.publish({ "x":X0, "y":Y0, "orientations":initial_orientation
 
 
 # 2 - AGENT PUBLISHES MESSAGES
-
 # Use a separate thread to publish position, state and sensors periodically
 new_helyOS_client_for_THREAD = HelyOSClient(RABBITMQ_HOST, RABBITMQ_PORT, uuid=UUID)
-new_helyOS_client_for_THREAD.connection = connect_rabbitmq(RABBITMQ_HOST, RABBITMQ_PORT, 
-                                            helyOS_client.checkin_data['rbmq_username'], 
-                                            helyOS_client.checkin_data['rbmq_password'])
+if RBMQ_USERNAME and RBMQ_PASSWORD:
+    new_helyOS_client_for_THREAD.connect_rabbitmq(RBMQ_USERNAME, RBMQ_PASSWORD) 
+else:
+    new_helyOS_client_for_THREAD.connect_rabbitmq(helyOS_client.checkin_data['rbmq_username'], 
+                                                 helyOS_client.checkin_data['rbmq_password'])
 
 
 publishing_topics =  (current_assignment_ros, vehi_state_ros, position_sensor_ros)

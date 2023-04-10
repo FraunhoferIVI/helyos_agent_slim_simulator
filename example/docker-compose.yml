@@ -36,8 +36,8 @@ services:
             - RABBITMQ_PORT=5672
 
             # RBMQ ACCOUNT
-            - RBMQ_USERNAME=${HELYOS_RBMQ_USERNAME}
-            - RBMQ_PASSWORD=${HELYOS_RBMQ_PASSWORD}
+            - RBMQ_USERNAME=${RBMQ_USERNAME}
+            - RBMQ_PASSWORD=${RBMQ_PASSWORD}
             # OR
             - REGISTRATION_TOKEN=0000-0000-0000-0000-0000
 
