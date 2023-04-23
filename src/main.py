@@ -10,10 +10,16 @@ import uuid
 
 # CONSTANTS
 RABBITMQ_HOST = os.environ.get('RABBITMQ_HOST', 'local_message_broker')
+RABBITMQ_HOST = os.environ.get('RBMQ_HOST', 'local_message_broker')
 RABBITMQ_PORT = os.environ.get('RABBITMQ_PORT', '5672')
+RABBITMQ_PORT = os.environ.get('RBMQ_PORT', '5672')
+ENABLE_SSL = os.environ.get('ENABLE_SSL', 'False') == "True"
+CACERTIFICATE_FILENAME = os.environ.get('GEOMETRY_FILENAME', "ca_certificate.pem")
+
+
 VEHICLE_NAME = os.environ.get('NAME', '')
 ASSIGNMENT_FORMAT = os.environ.get('ASSIGNMENT_FORMAT', 'trajectory')
-PATH_TRACKER = os.environ.get('PATH_TRACKER', 'perfect')
+PATH_TRACKER = os.environ.get('PATH_TRACKER', 'ideal')
 UUID = os.environ.get('UUID', "RANDOM_UUID")
 YARD_UID = os.environ.get('YARD_UID', "1")
 X0 = float(os.environ.get('X0', 0))
@@ -21,6 +27,7 @@ Y0 = float(os.environ.get('Y0', 0))
 ORIENTATION_0 = float(os.environ.get('ORIENTATION', 0))
 GEOMETRY_FORMAT = os.environ.get('GEOMETRY_FORMAT', "trucktrix-vehicle")
 GEOMETRY_FILENAME = os.environ.get('GEOMETRY_FILENAME', "geometry.json")
+
 AGENT_OPERATIONS =  os.environ.get('AGENT_OPERATIONS', "drive,")
 VEHICLE_PARTS =  int(os.environ.get('VEHICLE_PARTS', 1))
 CHECKIN_MAX_ATTEMPTS = int(os.environ.get('CHECKIN_MAX_ATTEMPTS', '5'))
@@ -35,6 +42,13 @@ try:
         GEOMETRY =json.load(f)
 except:
     GEOMETRY = {}
+
+try:
+    with open(CACERTIFICATE_FILENAME, 'r') as f:
+        CA_CERTIFICATE = f.read()
+except:
+    CA_CERTIFICATE = ""
+    
 
 
 # 1 - AGENT INITIALIZATION
@@ -81,7 +95,7 @@ operations = AGENT_OPERATIONS.split(',')
 resources = AgentCurrentResources(operation_types_available=operations, work_process_id=None, reserved=False)
 assignment = AssignmentCurrentStatus(id=None, status=None, result={})
 
-helyOS_client = HelyOSClient(RABBITMQ_HOST, RABBITMQ_PORT, uuid=UUID)
+helyOS_client = HelyOSClient(RABBITMQ_HOST, RABBITMQ_PORT, uuid=UUID, enable_ssl=ENABLE_SSL, ca_certificate=CA_CERTIFICATE)
 attempts = 0; helyos_excep = None
 while attempts < CHECKIN_MAX_ATTEMPTS:
     try:
@@ -123,12 +137,12 @@ position_sensor_ros.publish({ "x":X0, "y":Y0, "orientations":initial_orientation
 
 # 2 - AGENT PUBLISHES MESSAGES
 # Use a separate thread to publish position, state and sensors periodically
-new_helyOS_client_for_THREAD = HelyOSClient(RABBITMQ_HOST, RABBITMQ_PORT, uuid=UUID)
+new_helyOS_client_for_THREAD = HelyOSClient(RABBITMQ_HOST, RABBITMQ_PORT, uuid=UUID, enable_ssl=ENABLE_SSL, ca_certificate=CA_CERTIFICATE)
 if RBMQ_USERNAME and RBMQ_PASSWORD:
     new_helyOS_client_for_THREAD.connect_rabbitmq(RBMQ_USERNAME, RBMQ_PASSWORD) 
 else:
     new_helyOS_client_for_THREAD.connect_rabbitmq(helyOS_client.checkin_data['rbmq_username'], 
-                                                 helyOS_client.checkin_data['rbmq_password'])
+                                                 helyOS_client.rbmq_password)
 
 
 publishing_topics =  (current_assignment_ros, vehi_state_ros, position_sensor_ros)

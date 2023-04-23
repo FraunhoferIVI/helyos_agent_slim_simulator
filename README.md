@@ -15,7 +15,7 @@ Or use a docker-compose as shown in `/example/docker-compose.yml`.
 ## Build
 
 ```
-docker build --no-cache -t helyosframework/helyos_agent_slim_simulator .
+docker build --no-cache -t helyosframework/helyos_agent_slim_simulator
 docker push helyosframework/helyos_agent_slim_simulator
 ```
 
@@ -55,7 +55,7 @@ The simulator is configured by the environment variables:
 | NAME | Agent name |
 | YARD_UID | Yard identifier |
 | --- | --- |
-| PATH_TRACKER |  perfect (arb. unit), stanley (mm), straight_to_destination(arb.unit)|
+| PATH_TRACKER |  ideal (arb. unit), stanley (mm), straight_to_destination(arb.unit)|
 | ASSIGNMENT_FORMAT | fixed, trajectory, destination, trucktrix-path |
 | VEHICLE_PARTS | Number of parts. eg. truck with trailer: 2 |
 | --- | --- |

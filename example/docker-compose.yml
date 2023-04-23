@@ -14,14 +14,14 @@ services:
         build: ../
 
         volumes:
-            - ./custom-geometry.json:/app/geometry.json
-            
+            - ./custom-geometry.json:/app/geometry.json        # To modify reported geometry.
+            - ./ca_certificate.pem:/app/ca_certificate.pem # To verify rbmq server url.
         environment:
 
             # AGENT ID
             - UUID=Bb3402-9fc5-fdgs-434b-b87e-f19c5435113 
-            - PATH_TRACKER=perfect  # perfect | straight_to_destination | stanley
-            - ASSIGNMENT_FORMAT=autotruck-path  # fixed | trajectory | destination | autotruck-path |
+            - PATH_TRACKER=ideal  # ideal | straight_to_destination | stanley (defaults to ideal)
+            - ASSIGNMENT_FORMAT=autotruck-path  # fixed | trajectory | destination | autotruck-path 
             - NAME='MY TRUCK'
             - X0=0
             - Y0=-50000
@@ -31,13 +31,13 @@ services:
             - YARD_UID=1
 
             # RABBITMQ 
-            - ENCRYPT=none  # none | agent | helyos | helyos-agent
-            - RABBITMQ_HOST=local_message_broker # local_message_broker | rabbitmq.ivi.fraunhofer.de 
-            - RABBITMQ_PORT=5672
+            - RBMQ_HOST=local_message_broker # local_message_broker | rabbitmq.server.com 
+            - RBMQ_PORT=5671
+            - ENABLE_SSL=True # True | False (defaults to False)
 
             # RBMQ ACCOUNT
-            - RBMQ_USERNAME=${RBMQ_USERNAME}
-            - RBMQ_PASSWORD=${RBMQ_PASSWORD}
+            # - RBMQ_USERNAME=${RBMQ_USERNAME}
+            # - RBMQ_PASSWORD=${RBMQ_PASSWORD}
             # OR
             - REGISTRATION_TOKEN=0000-0000-0000-0000-0000
 

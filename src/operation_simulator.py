@@ -10,11 +10,11 @@ from utils.data_format_convertors import convert_autotruck_path_to_trajectory, g
 # driving_operation_ros, position_sensor_ros, vehi_state_ros, current_assignment_ros
 
 VELOCITY = float(os.environ.get('VELOCITY', 2.8)) # 2.8m/s ~ 10 kM/hour
-PATH_TRACKER = os.environ.get('PATH_TRACKER', 'perfect')
+PATH_TRACKER = os.environ.get('PATH_TRACKER', 'ideal')
 
 
 def path_tracking(pose0, target_trajectory):
-    if PATH_TRACKER == "perfect":
+    if PATH_TRACKER == "perfect" or PATH_TRACKER == "ideal":
         actual_trajectory = target_trajectory
     if PATH_TRACKER == 'stanley':
         actual_trajectory = stanley_path_follower(pose0, target_trajectory)

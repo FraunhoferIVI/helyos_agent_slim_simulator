@@ -3,7 +3,7 @@
 from utils.controllers.stanley_controller import calculate_steering_trajectory
 
 
-def perfect_path_follower(target_trajectory):    
+def ideal_path_follower(target_trajectory):    
     trajectory = target_trajectory
     return trajectory
 
