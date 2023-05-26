@@ -1,21 +1,23 @@
 def convert_autotruck_path_to_trajectory(autotruck_path):
-    steps = autotruck_path['payload']['tasks'][0]['payload']['operations'][0]['payload']['data_payload']['steps']
-    orientation_head = 0;  trajectory=[]
+    trajectory=[]    
+    for task in  autotruck_path['payload']['tasks']:   
+        steps = task['payload']['operations'][0]['payload']['data_payload']['steps']
+        orientation_head = 0
 
-    for step in steps:
-        parts = step['step']['vehicles']
-        head = parts[0]['vehicle']
-        x = head['position'][0]
-        y = head['position'][1]
-        orientation_head = head['orientation']
-        orientations = [orientation_head]
+        for step in steps:
+            parts = step['step']['vehicles']
+            head = parts[0]['vehicle']
+            x = head['position'][0]
+            y = head['position'][1]
+            orientation_head = head['orientation']
+            orientations = [orientation_head]
 
-        if len(parts) > 1:
-            for ind in range(1, len(parts)):
-                part = parts[ind]['vehicle']
-                orientations.append(part['orientation'])
+            if len(parts) > 1:
+                for ind in range(1, len(parts)):
+                    part = parts[ind]['vehicle']
+                    orientations.append(part['orientation'])
 
-        trajectory.append({"x":x, "y":y, "orientations":orientations, "time":None})
+            trajectory.append({"x":x, "y":y, "orientations":orientations, "time":None})
 
     return trajectory
 
