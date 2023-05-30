@@ -15,8 +15,8 @@ Or use a docker-compose as shown in `/example/docker-compose.yml`.
 ## Build
 
 ```
-docker build --no-cache -t helyosframework/helyos_agent_slim_simulator
-docker push helyosframework/helyos_agent_slim_simulator
+docker build --no-cache -t helyosframework/helyos_agent_slim_simulator:0.4.1 .
+docker push helyosframework/helyos_agent_slim_simulator:0.4.1
 ```
 
 ## Assignment data formats

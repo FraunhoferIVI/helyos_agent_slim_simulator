@@ -155,9 +155,9 @@ position_thread.start()
 
 # Register instant actions callbacks 
 
-def my_reserve_callback(*args): return reserve_callback(vehi_state_ros, agentConnector, *args)
-def my_release_callback(*args): return release_callback(vehi_state_ros, agentConnector, *args )
-def my_cancel_assignm_callback(*args): return cancel_assignm_callback(driving_operation_ros, agentConnector, *args )
+def my_reserve_callback(*args):        return reserve_callback(vehi_state_ros, agentConnector, *args)
+def my_release_callback(*args):        return release_callback(vehi_state_ros, agentConnector, *args )
+def my_cancel_assignm_callback(*args): return cancel_assignm_callback(driving_operation_ros, current_assignment_ros, agentConnector, *args )
 def my_any_other_instant_action_callback(*args): return my_other_callback(position_sensor_ros,driving_operation_ros, *args)
 
 agentConnector.consume_instant_action_messages(my_reserve_callback, my_release_callback, my_cancel_assignm_callback, my_any_other_instant_action_callback)
