@@ -14,7 +14,7 @@ RABBITMQ_HOST = os.environ.get('RBMQ_HOST', 'local_message_broker')
 RABBITMQ_PORT = os.environ.get('RABBITMQ_PORT', '5672')
 RABBITMQ_PORT = os.environ.get('RBMQ_PORT', '5672')
 ENABLE_SSL = os.environ.get('ENABLE_SSL', 'False') == "True"
-CACERTIFICATE_FILENAME = os.environ.get('GEOMETRY_FILENAME', "ca_certificate.pem")
+CACERTIFICATE_FILENAME = os.environ.get('CACERTIFICATE_FILENAME', "ca_certificate.pem")
 
 
 VEHICLE_NAME = os.environ.get('NAME', '')
