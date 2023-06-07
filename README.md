@@ -72,7 +72,7 @@ The simulator is configured by the environment variables:
 | ENABLE_SSL | True or False (default: False)  |
 
 
-For `ENABLE_SSL`=True, you must copy the server CA ceriticate to the location app/ca_certificate.pem. Check in `./example`.
+For `ENABLE_SSL`=True, you must copy the server host CA certificate to the location app/ca_certificate.pem. Check in `./example`.
 
 Optional environmnet variable for the `stanley` path tracker:
 
