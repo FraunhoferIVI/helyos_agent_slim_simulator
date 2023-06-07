@@ -32,14 +32,22 @@ services:
 
             # RABBITMQ 
             - RBMQ_HOST=local_message_broker # local_message_broker | rabbitmq.server.com 
+
+            # FOR MQTT AGENT
+            # - RBMQ_PORT=8883
+            # - ENABLE_SSL=True # True | False (defaults to False)
+            # - PROTOCOL=MQTT # AMQP | MQTT (defaults to AMQP)
+            
+            # FOR AMQP AGENT (DEFAULT)
             - RBMQ_PORT=5671
             - ENABLE_SSL=True # True | False (defaults to False)
+            - PROTOCOL=AMQP # AMQP | MQTT (defaults to AMQP)
 
             # RBMQ ACCOUNT
-            # - RBMQ_USERNAME=${RBMQ_USERNAME}
-            # - RBMQ_PASSWORD=${RBMQ_PASSWORD}
+            - RBMQ_USERNAME=Bb3402-9fc5-fdgs-434b-b87e-f19c5435113
+            - RBMQ_PASSWORD=senha
             # OR
-            - REGISTRATION_TOKEN=0000-0000-0000-0000-0000
+            # - REGISTRATION_TOKEN=0000-0000-0000-0000-0000
 
         networks:
             - control-tower-net

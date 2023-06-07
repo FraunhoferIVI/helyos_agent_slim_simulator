@@ -65,9 +65,14 @@ The simulator is configured by the environment variables:
 | VELOCITY | Driving velocity 0 to 10. (arb. unit) |
 | --- | --- |
 | RABBITMQ_HOST | HelyOS RabbitMQ Server  |
-| RABBITMQ_PORT | HelyOS RabbitMQ Port (default:5672)  |
+| RABBITMQ_PORT | HelyOS RabbitMQ Port (e.g.,5671, 5672, 1883, 8883, default:5672)  |
 | RBMQ_USERNAME | Agent RabbitMQ account name (optional) |
 | RBMQ_PASSWORD | Agent RabbitMQ account password (optional)  |
+| PROTOCOL | "AMQP" or "MQTT" (default: AMPQ)  |
+| ENABLE_SSL | True or False (default: False)  |
+
+
+For `ENABLE_SSL`=True, you must copy the server CA ceriticate to the location app/ca_certificate.pem. Check in `./example`.
 
 Optional environmnet variable for the `stanley` path tracker:
 
@@ -91,7 +96,6 @@ Ref:
 ### Authors
 
 *   Carlos E. Viol Barbosa
-*
 
 
 

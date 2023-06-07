@@ -24,7 +24,6 @@ def interprete_vehicle_state(vehicle_data, assignm_data, vehi_state_ros ):
 
 
 def periodic_publish_state_and_sensors(helyOS_client2, current_assignment_ros, vehi_state_ros, position_sensor_ros):
-    helyOS_client2.channel = helyOS_client2.connection.channel()
     agentConnector2 = AgentConnector(helyOS_client2)
     period = 1 # second
     z=0

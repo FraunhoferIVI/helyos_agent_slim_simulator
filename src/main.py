@@ -1,7 +1,7 @@
 import os, json, time
 from threading import Thread
 from data_publishing import periodic_publish_state_and_sensors
-from helyos_agent_sdk import HelyOSClient, AgentConnector, connect_rabbitmq
+from helyos_agent_sdk import HelyOSClient, HelyOSMQTTClient, AgentConnector, connect_rabbitmq
 from helyos_agent_sdk.models import AssignmentCurrentStatus, AGENT_STATE, AgentCurrentResources, ASSIGNMENT_STATUS
 from utils.MockROSCommunication import MockROSCommunication
 from instant_actions import cancel_assignm_callback, my_other_callback, release_callback, reserve_callback
@@ -11,9 +11,10 @@ import uuid
 # CONSTANTS
 RABBITMQ_HOST = os.environ.get('RABBITMQ_HOST', 'local_message_broker')
 RABBITMQ_HOST = os.environ.get('RBMQ_HOST', 'local_message_broker')
-RABBITMQ_PORT = os.environ.get('RABBITMQ_PORT', '5672')
-RABBITMQ_PORT = os.environ.get('RBMQ_PORT', '5672')
+RABBITMQ_PORT = int(os.environ.get('RABBITMQ_PORT', '5672'))
+RABBITMQ_PORT = int(os.environ.get('RBMQ_PORT', '5672'))
 ENABLE_SSL = os.environ.get('ENABLE_SSL', 'False') == "True"
+PROTOCOL = os.environ.get('PROTOCOL', 'AMQP')
 CACERTIFICATE_FILENAME = os.environ.get('CACERTIFICATE_FILENAME', "ca_certificate.pem")
 
 
@@ -48,8 +49,13 @@ try:
         CA_CERTIFICATE = f.read()
 except:
     CA_CERTIFICATE = ""
-    
 
+MessageBrokerClient = HelyOSClient
+
+if PROTOCOL == 'AMQP':   
+    MessageBrokerClient = HelyOSClient
+if PROTOCOL == 'MQTT':
+    MessageBrokerClient = HelyOSMQTTClient
 
 # 1 - AGENT INITIALIZATION
 
@@ -94,13 +100,12 @@ initial_status = AGENT_STATE.FREE
 operations = AGENT_OPERATIONS.split(',')
 resources = AgentCurrentResources(operation_types_available=operations, work_process_id=None, reserved=False)
 assignment = AssignmentCurrentStatus(id=None, status=None, result={})
-
-helyOS_client = HelyOSClient(RABBITMQ_HOST, RABBITMQ_PORT, uuid=UUID, enable_ssl=ENABLE_SSL, ca_certificate=CA_CERTIFICATE)
+helyOS_client = MessageBrokerClient(RABBITMQ_HOST, RABBITMQ_PORT, uuid=UUID, enable_ssl=ENABLE_SSL, ca_certificate=CA_CERTIFICATE)
 attempts = 0; helyos_excep = None
 while attempts < CHECKIN_MAX_ATTEMPTS:
     try:
         if RBMQ_USERNAME and RBMQ_PASSWORD:
-            helyOS_client.connect_rabbitmq(RBMQ_USERNAME, RBMQ_PASSWORD)
+            helyOS_client.connect(RBMQ_USERNAME, RBMQ_PASSWORD)
 
         print(f"Check in, attempt {attempts+1} ...")
         helyOS_client.perform_checkin(yard_uid=YARD_UID, agent_data=agent_data, status=initial_status.value)
@@ -112,8 +117,8 @@ while attempts < CHECKIN_MAX_ATTEMPTS:
 if attempts == CHECKIN_MAX_ATTEMPTS:
     raise helyos_excep
 
-helyOS_client.get_checkin_result()         
-print("\n checkin_data:", helyOS_client.checkin_data['map']['origin'])
+helyOS_client.get_checkin_result()
+print("\n connected to message broker")
 agentConnector = AgentConnector(helyOS_client)
 agentConnector.publish_state(initial_status, resources, assignment_status=assignment)
 
@@ -137,11 +142,11 @@ position_sensor_ros.publish({ "x":X0, "y":Y0, "orientations":initial_orientation
 
 # 2 - AGENT PUBLISHES MESSAGES
 # Use a separate thread to publish position, state and sensors periodically
-new_helyOS_client_for_THREAD = HelyOSClient(RABBITMQ_HOST, RABBITMQ_PORT, uuid=UUID, enable_ssl=ENABLE_SSL, ca_certificate=CA_CERTIFICATE)
+new_helyOS_client_for_THREAD = MessageBrokerClient(RABBITMQ_HOST, RABBITMQ_PORT, uuid=UUID, enable_ssl=ENABLE_SSL, ca_certificate=CA_CERTIFICATE)
 if RBMQ_USERNAME and RBMQ_PASSWORD:
-    new_helyOS_client_for_THREAD.connect_rabbitmq(RBMQ_USERNAME, RBMQ_PASSWORD) 
+    new_helyOS_client_for_THREAD.connect(RBMQ_USERNAME, RBMQ_PASSWORD) 
 else:
-    new_helyOS_client_for_THREAD.connect_rabbitmq(helyOS_client.checkin_data['rbmq_username'], 
+    new_helyOS_client_for_THREAD.connect(helyOS_client.checkin_data['rbmq_username'], 
                                                  helyOS_client.rbmq_password)
 
 
@@ -166,7 +171,7 @@ agentConnector.consume_instant_action_messages(my_reserve_callback, my_release_c
 
 # Register the assignment callback 
 
-def my_assignment_callback(ch, method, properties, inst_assignment_msg): 
+def my_assignment_callback(ch, sender, inst_assignment_msg): 
     print(" => assignment is received")
 
     assignment_metadata = inst_assignment_msg.assignment_metadata
@@ -186,4 +191,4 @@ agentConnector.consume_assignment_messages(assignment_callback=my_assignment_cal
 
 # Agent consume messages from helyOS 
 
-agentConnector.start_consuming()
+agentConnector.start_listening()
