@@ -1,5 +1,5 @@
 
-import time
+import time, json, math
 from helyos_agent_sdk import AgentConnector
 from helyos_agent_sdk.models import AssignmentCurrentStatus
 
@@ -10,6 +10,12 @@ def get_vehicle_position(position_sensor_ros):
     # Get x, y, orientations from the vehicle
     return position_sensor_ros.read()
 
+def get_trailer_position(position_sensor_ros):
+    # Get x, y, orientations from the vehicle
+    pose = {**position_sensor_ros.read()}
+    pose['x'] = pose['x'] + 1000 * math.cos(pose['orientations'][0]/1000)
+    pose['y'] = pose['y'] + 1000 * math.sin(pose['orientations'][0]/1000)
+    return pose
 
 def get_assignment_state(current_assignment_ros):
     ''' Get vehicle state: "failed", "active", "succeeded", etc... '''    
@@ -36,6 +42,19 @@ def periodic_publish_state_and_sensors(helyOS_client2, current_assignment_ros, v
                                             orientations=agent_data['orientations'], sensors=agent_data['sensors'])
         except Exception as e:
             print("cannot read position.", e)
+
+
+        trailer_uuid = vehi_state_ros.get('CONNECTED_TRAILER', None)
+        if trailer_uuid is not None:
+            try:
+                trailer_data = get_trailer_position(position_sensor_ros)
+                body = {'x':trailer_data["x"], 'y':trailer_data["y"]}
+                message= json.dumps({'type': 'agent_update','body': body})
+                helyOS_client2.publish(routing_key=f"agent.{trailer_uuid}.visualization", message=message)
+                
+            except Exception as e:
+                print("cannot read trailer position.", e)
+
         
         try:
             assignm_data = get_assignment_state(current_assignment_ros)

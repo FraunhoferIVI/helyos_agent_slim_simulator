@@ -50,10 +50,11 @@ def cancel_assignm_callback(driving_operation_ros, current_assignment_ros, agent
 
 
 
-def my_other_callback(position_sensor_ros, driving_operation_ros, ch, sender, received_str):
+def my_other_callback(position_sensor_ros, driving_operation_ros, vehi_state_ros, agentConnector, ch, sender, received_str):
     print("not helyos-related instant action", received_str)
     agent_data = position_sensor_ros.read()    
     operation_commands = driving_operation_ros.read()
+    states_ros = vehi_state_ros.read()
 
     try: 
         message = json.loads(received_str)['message']
@@ -65,15 +66,54 @@ def my_other_callback(position_sensor_ros, driving_operation_ros, ch, sender, re
     
     sensor_patch = {}
 
-    
+
+    if "connect_trailer" in command['body']:  
+        uuid = command['body'].split("connect_trailer")[1]
+        uuid = uuid.strip()
+        
+        agentConnector.publish_general_updates({"followers":[uuid]})
+        vehi_state_ros.publish({**states_ros, 'CONNECTED_TRAILER': uuid})
+
+        sensor_patch = {  'instant_actions_response':{
+                        'task_control':{
+                                'title':"Trailer",
+                                'type': "string",
+                                'value':"attached",
+                                'unit':""},
+                        }
+            }   
+
+
+        # If any information about the trailer is needed, it can be easily requested using summary RPC
+        # summary_rpc = SummaryRPC(agentConnector.helyos_client)
+        # agents = summary_rpc.call({'query':"allAgents", 'conditions':{"uuid":uuid}})
+        # trailer = agents[0]
+        # print(trailer)
+
+
+
+    if "disconnect_trailer" in command['body']:
+        agentConnector.publish_general_updates({"followers":[]})
+        vehi_state_ros.publish({**states_ros, 'CONNECTED_TRAILER': uuid})
+
+        sensor_patch = {  'instant_actions_response':{
+                        'task_control':{
+                                'title':"Trailer",
+                                'type': "string",
+                                'value':"dettached",
+                                'unit':""},
+                        }
+            }   
+
+
     if "pause" == command['body']:     
         driving_operation_ros.publish({**operation_commands, 'PAUSE_ASSIGNMENT': True})
         sensor_patch = {  'instant_actions_response':{
                             'task_control':{
-                                    'title':'Task status',
-                                    'type': 'string',
-                                        'value':'paused',
-                                        'unit':''},
+                                    'title':"Task status",
+                                    'type': "string",
+                                    'value':"paused",
+                                    'unit':""},
                         }
                 }    
 
@@ -81,17 +121,17 @@ def my_other_callback(position_sensor_ros, driving_operation_ros, ch, sender, re
         driving_operation_ros.publish({**operation_commands, 'PAUSE_ASSIGNMENT': False})
         sensor_patch = {  'instant_actions_response':{
                                     'task_control':{
-                                            'title':'Task status',
-                                            'type': 'string',
-                                             'value':'normal',
-                                             'unit':''},
+                                            'title':"Task status",
+                                            'type': "string",
+                                             'value':"normal",
+                                             'unit':""},
                                 }
                         }     
 
     
     if "tail lift" in command['body']:     
-        if command['body'] == "tail lift down": value = 'down'
-        if command['body'] == "tail lift up":  value = 'up'
+        if command['body'] == "tail lift down": value = "down"
+        if command['body'] == "tail lift up":  value = "up"
 
         sensor_patch = {   'actuators':{
                                     'sensor_act1': {
@@ -103,8 +143,8 @@ def my_other_callback(position_sensor_ros, driving_operation_ros, ch, sender, re
                       } 
 
     if "headlight" in command['body']:     
-        if command['body'] == "headlight on": value = 'on'
-        if command['body'] == "headlight off":  value = 'off'
+        if command['body'] == "headlight on": value = "on"
+        if command['body'] == "headlight off":  value = "off"
 
         sensor_patch = {   'lights':{
                                     'sensor_hl1': {
