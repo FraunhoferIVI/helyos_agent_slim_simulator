@@ -54,13 +54,16 @@ def periodic_publish_state_and_sensors(helyOS_client2, current_assignment_ros, v
             print("cannot read position.", e)
 
 
-        trailer_uuid = vehi_state_ros.read().get('CONNECTED_TRAILER', None)
-        if trailer_uuid is not None:
+        trailer = vehi_state_ros.read().get('CONNECTED_TRAILER', None)
+        if trailer is not None:
             try:
                 trailer_data = get_trailer_position(position_sensor_ros)
                 body = trailer_data
                 message= json.dumps({'type': 'agent_sensors','body': body})
-                helyOS_client2.publish(routing_key=f"agent.{trailer_uuid}.visualization", message=message)
+                helyOS_client2.publish(routing_key=f"agent.{trailer['uuid']}.visualization", message=message)
+                message= json.dumps({'type': 'agent_state','body': {'status':trailer['status']}})
+                helyOS_client2.publish(routing_key=f"agent.{trailer['uuid']}.state", message=message)
+
                 
             except Exception as e:
                 print("cannot read trailer position.", e)

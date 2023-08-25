@@ -69,9 +69,12 @@ def my_other_callback(position_sensor_ros, driving_operation_ros, vehi_state_ros
     try:
         
         if "disconnect_trailer" in command['body']:
-            # Disconnect with the trailer             
-            agentConnector.publish_general_updates({'followers':[]})
+            # Disconnect with the trailer 
+            states_ros['CONNECTED_TRAILER']['status']=AGENT_STATE.FREE.value           
+            vehi_state_ros.publish({**states_ros})
+            time.sleep(3)
 
+            agentConnector.publish_general_updates({'followers':[]})
             vehi_state_ros.publish({**states_ros, 'CONNECTED_TRAILER': None})
             sensor_patch = {  'instant_actions_response':{
                             'trailer_control':{
@@ -104,7 +107,7 @@ def my_other_callback(position_sensor_ros, driving_operation_ros, vehi_state_ros
                 if not found_trailer:
                     raise Exception("Trailer not found as follower.")
                 
-                vehi_state_ros.publish({**states_ros, 'CONNECTED_TRAILER': trailer_uuid})
+                vehi_state_ros.publish({**states_ros, 'CONNECTED_TRAILER': {'uuid':trailer_uuid, 'status': AGENT_STATE.BUSY.value}})
                 sensor_patch = {  'instant_actions_response':{
                                 'trailer_control':{
                                         'title':"Trailer",
