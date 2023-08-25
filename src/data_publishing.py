@@ -12,10 +12,20 @@ def get_vehicle_position(position_sensor_ros):
 
 def get_trailer_position(position_sensor_ros):
     # Get x, y, orientations from the vehicle
-    pose = {**position_sensor_ros.read()}
-    pose['x'] = pose['x'] + 1000 * math.cos(pose['orientations'][0]/1000)
-    pose['y'] = pose['y'] + 1000 * math.sin(pose['orientations'][0]/1000)
-    return pose
+    truck = {**position_sensor_ros.read()}
+    trailer = {'pose':{}}
+    trailer['pose']['x'] = truck['x'] - 4000 * math.cos(truck['orientations'][0]/1000)
+    trailer['pose']['y'] = truck['y'] - 4000 * math.sin(truck['orientations'][0]/1000)
+    trailer['pose']['orientations'] = truck['orientations']
+    trailer['sensors'] =   {  'temperatures':{
+                                        'sensor_t1': {
+                                            'title':"trailer temperature",
+                                            'type' :"number",
+                                            'value': 40,
+                                            'unit': "oC"}
+                        }}
+
+    return trailer
 
 def get_assignment_state(current_assignment_ros):
     ''' Get vehicle state: "failed", "active", "succeeded", etc... '''    
@@ -44,12 +54,12 @@ def periodic_publish_state_and_sensors(helyOS_client2, current_assignment_ros, v
             print("cannot read position.", e)
 
 
-        trailer_uuid = vehi_state_ros.get('CONNECTED_TRAILER', None)
+        trailer_uuid = vehi_state_ros.read().get('CONNECTED_TRAILER', None)
         if trailer_uuid is not None:
             try:
                 trailer_data = get_trailer_position(position_sensor_ros)
-                body = {'x':trailer_data["x"], 'y':trailer_data["y"]}
-                message= json.dumps({'type': 'agent_update','body': body})
+                body = trailer_data
+                message= json.dumps({'type': 'agent_sensors','body': body})
                 helyOS_client2.publish(routing_key=f"agent.{trailer_uuid}.visualization", message=message)
                 
             except Exception as e:

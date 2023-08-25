@@ -1,8 +1,8 @@
 
 
 import json
+import time
 from helyos_agent_sdk.models import AssignmentCurrentStatus, AGENT_STATE, AgentCurrentResources, ASSIGNMENT_STATUS
-
 
 def reserve_callback( vehi_state_ros, agentConnector, ch, sender, req_resources):
     print("=> reserve agent", req_resources)
@@ -11,7 +11,7 @@ def reserve_callback( vehi_state_ros, agentConnector, ch, sender, req_resources)
                                       work_process_id           = req_resources.work_process_id,
                                       reserved                  = req_resources.reserved)
     
-    vehi_state_ros.publish({"agent_state": AGENT_STATE.READY})
+    vehi_state_ros.publish({**vehi_state_ros.read(),"agent_state": AGENT_STATE.READY})
     agentConnector.publish_state(status=AGENT_STATE.READY, resources=resources, assignment_status=None)
     print("<= agent reserved", resources)
     
@@ -23,7 +23,7 @@ def release_callback(vehi_state_ros, agentConnector, ch, sender, req_resources):
                                       work_process_id           = req_resources.work_process_id,
                                       reserved                  = req_resources.reserved)
     
-    vehi_state_ros.publish({"agent_state": AGENT_STATE.FREE})
+    vehi_state_ros.publish({**vehi_state_ros.read(),'agent_state': AGENT_STATE.FREE})
     agentConnector.publish_state(status=AGENT_STATE.FREE, resources=resources, assignment_status=None)   
     print(" <= agent released", resources)
     
@@ -50,7 +50,7 @@ def cancel_assignm_callback(driving_operation_ros, current_assignment_ros, agent
 
 
 
-def my_other_callback(position_sensor_ros, driving_operation_ros, vehi_state_ros, agentConnector, ch, sender, received_str):
+def my_other_callback(position_sensor_ros, driving_operation_ros, vehi_state_ros, agentConnector, summary_rpc, ch, sender, received_str):
     print("not helyos-related instant action", received_str)
     agent_data = position_sensor_ros.read()    
     operation_commands = driving_operation_ros.read()
@@ -61,101 +61,130 @@ def my_other_callback(position_sensor_ros, driving_operation_ros, vehi_state_ros
         print(message)
         command =  json.loads(message) 
     except:
-        print('\nAgent does not know how interpret the command:', received_str[0:50])
+        print("\nAgent does not know how interpret the command:", received_str[0:50])
         return
     
     sensor_patch = {}
 
-
-    if "connect_trailer" in command['body']:  
-        uuid = command['body'].split("connect_trailer")[1]
-        uuid = uuid.strip()
+    try:
         
-        agentConnector.publish_general_updates({"followers":[uuid]})
-        vehi_state_ros.publish({**states_ros, 'CONNECTED_TRAILER': uuid})
+        if "disconnect_trailer" in command['body']:
+            # Disconnect with the trailer             
+            agentConnector.publish_general_updates({'followers':[]})
 
-        sensor_patch = {  'instant_actions_response':{
-                        'task_control':{
-                                'title':"Trailer",
-                                'type': "string",
-                                'value':"attached",
-                                'unit':""},
-                        }
-            }   
-
-
-        # If any information about the trailer is needed, it can be easily requested using summary RPC
-        # summary_rpc = SummaryRPC(agentConnector.helyos_client)
-        # agents = summary_rpc.call({'query':"allAgents", 'conditions':{"uuid":uuid}})
-        # trailer = agents[0]
-        # print(trailer)
-
-
-
-    if "disconnect_trailer" in command['body']:
-        agentConnector.publish_general_updates({"followers":[]})
-        vehi_state_ros.publish({**states_ros, 'CONNECTED_TRAILER': uuid})
-
-        sensor_patch = {  'instant_actions_response':{
-                        'task_control':{
-                                'title':"Trailer",
-                                'type': "string",
-                                'value':"dettached",
-                                'unit':""},
-                        }
-            }   
-
-
-    if "pause" == command['body']:     
-        driving_operation_ros.publish({**operation_commands, 'PAUSE_ASSIGNMENT': True})
-        sensor_patch = {  'instant_actions_response':{
-                            'task_control':{
-                                    'title':"Task status",
+            vehi_state_ros.publish({**states_ros, 'CONNECTED_TRAILER': None})
+            sensor_patch = {  'instant_actions_response':{
+                            'trailer_control':{
+                                    'title':"Trailer",
                                     'type': "string",
-                                    'value':"paused",
+                                    'value':"dettached",
                                     'unit':""},
-                        }
-                }    
+                            }
+                }   
 
-    if "resume" == command['body']:                                                
-        driving_operation_ros.publish({**operation_commands, 'PAUSE_ASSIGNMENT': False})
-        sensor_patch = {  'instant_actions_response':{
-                                    'task_control':{
-                                            'title':"Task status",
-                                            'type': "string",
-                                             'value':"normal",
-                                             'unit':""},
+
+        elif "connect_trailer" in command['body']:  
+            try:
+                trailer_uuid = command['body'].split("connect_trailer")[1]
+                trailer_uuid = trailer_uuid.strip()
+                leader_uuid = agentConnector.helyos_client.uuid   
+
+                # Connect with the trailer             
+                agentConnector.publish_general_updates({'followers':[trailer_uuid]})
+
+                # Confirm if the interconnection has worked
+                found_trailer = False; i = 0
+                while not found_trailer and i < 3 :
+                    time.sleep(1)
+                    follower_agents = summary_rpc.call({'query':"allFollowers", 'conditions':{"uuid":leader_uuid}})
+                    for trailer in follower_agents: found_trailer = found_trailer or trailer['uuid'] == trailer_uuid
+                    print("trailer data", follower_agents)
+                    i = i + 1
+
+                if not found_trailer:
+                    raise Exception("Trailer not found as follower.")
+                
+                vehi_state_ros.publish({**states_ros, 'CONNECTED_TRAILER': trailer_uuid})
+                sensor_patch = {  'instant_actions_response':{
+                                'trailer_control':{
+                                        'title':"Trailer",
+                                        'type': "string",
+                                        'value':"attached",
+                                        'unit':""},
                                 }
-                        }     
+                    }   
+                
+            except Exception as e:
+                print(e)
+                sensor_patch = {  'instant_actions_response':{
+                                'trailer_control':{
+                                        'title':"Trailer",
+                                        'type': "string",
+                                        'value':"attachment failed",
+                                        'unit':""},
+                                }
+                    }
+                
+            # If any further information about the trailer is needed, it can be easily requested using summary RPC
+            # agents = summary_rpc.call({'query':"allAgents", 'conditions':{"name":"ABC"}})
+            # trailer = agents[0]
+            # print(trailer)
 
-    
-    if "tail lift" in command['body']:     
-        if command['body'] == "tail lift down": value = "down"
-        if command['body'] == "tail lift up":  value = "up"
 
-        sensor_patch = {   'actuators':{
-                                    'sensor_act1': {
-                                        'title':"Tail Lift",
-                                        'type' :"string",
-                                        'value': value,
-                                        'unit': ""}
-                                     }
-                      } 
 
-    if "headlight" in command['body']:     
-        if command['body'] == "headlight on": value = "on"
-        if command['body'] == "headlight off":  value = "off"
 
-        sensor_patch = {   'lights':{
-                                    'sensor_hl1': {
-                                        'title':"Headlight",
-                                        'type' :"string",
-                                        'value': value,
-                                        'unit': ""}
-                                     }
-                      } 
+        if "pause" == command['body']:     
+            driving_operation_ros.publish({**operation_commands, 'PAUSE_ASSIGNMENT': True})
+            sensor_patch = {  'instant_actions_response':{
+                                'task_control':{
+                                        'title':"Task status",
+                                        'type': "string",
+                                        'value':"paused",
+                                        'unit':""},
+                            }
+                    }    
+
+        if "resume" == command['body']:                                                
+            driving_operation_ros.publish({**operation_commands, 'PAUSE_ASSIGNMENT': False})
+            sensor_patch = {  'instant_actions_response':{
+                                        'task_control':{
+                                                'title':"Task status",
+                                                'type': "string",
+                                                'value':"normal",
+                                                'unit':""},
+                                    }
+                            }     
 
         
-    sensors = {**agent_data['sensors'], **sensor_patch}
-    agent_data['sensors'] = sensors
-    position_sensor_ros.publish(agent_data)    
+        if "tail lift" in command['body']:     
+            if command['body'] == "tail lift down": value = "down"
+            if command['body'] == "tail lift up":  value = "up"
+
+            sensor_patch = {   'actuators':{
+                                        'sensor_act1': {
+                                            'title':"Tail Lift",
+                                            'type' :"string",
+                                            'value': value,
+                                            'unit': ""}
+                                        }
+                        } 
+
+        if "headlight" in command['body']:     
+            if command['body'] == "headlight on": value = "on"
+            if command['body'] == "headlight off":  value = "off"
+
+            sensor_patch = {   'lights':{
+                                        'sensor_hl1': {
+                                            'title':"Headlight",
+                                            'type' :"string",
+                                            'value': value,
+                                            'unit': ""}
+                                        }
+                        } 
+
+            
+        sensors = {**agent_data['sensors'], **sensor_patch}
+        agent_data['sensors'] = sensors
+        position_sensor_ros.publish(agent_data)    
+    except Exception as e:
+        print(e)

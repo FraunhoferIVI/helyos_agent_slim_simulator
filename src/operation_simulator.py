@@ -53,7 +53,7 @@ def assignment_execution_local_simulator(inst_assignment_msg, ASSIGNMENT_FORMAT,
 
     try:
         current_assignment_ros.publish({'id':assignment_metadata.id, 'status':ASSIGNMENT_STATUS.EXECUTING})
-        vehi_state_ros.publish({"agent_state": AGENT_STATE.BUSY})
+        vehi_state_ros.publish({**vehi_state_ros.read(),"agent_state": AGENT_STATE.BUSY})
 
         print(" <= assignment is executing")
 
@@ -64,7 +64,7 @@ def assignment_execution_local_simulator(inst_assignment_msg, ASSIGNMENT_FORMAT,
             print(" * operation concluded")
             
             current_assignment_ros.publish({'id':assignment_metadata.id, 'status':ASSIGNMENT_STATUS.SUCCEEDED})
-            vehi_state_ros.publish({"agent_state": AGENT_STATE.READY})
+            vehi_state_ros.publish({**vehi_state_ros.read(),"agent_state": AGENT_STATE.READY})
             
             print(" <= assignment suceeded")
             
@@ -73,7 +73,7 @@ def assignment_execution_local_simulator(inst_assignment_msg, ASSIGNMENT_FORMAT,
             print(" * operation interrupted")
             
             current_assignment_ros.publish({'id':assignment_metadata.id, 'status':ASSIGNMENT_STATUS.CANCELED})
-            vehi_state_ros.publish({"agent_state": AGENT_STATE.FREE})
+            vehi_state_ros.publish({**vehi_state_ros.read(),"agent_state": AGENT_STATE.FREE})
 
             print(" <= assignment canceled")
 
@@ -81,7 +81,7 @@ def assignment_execution_local_simulator(inst_assignment_msg, ASSIGNMENT_FORMAT,
     except Exception as e:
         
         current_assignment_ros.publish({'id':assignment_metadata.id, 'status':ASSIGNMENT_STATUS.FAILED})
-        vehi_state_ros.publish({"agent_state": AGENT_STATE.FREE}) 
+        vehi_state_ros.publish({**vehi_state_ros.read(), "agent_state": AGENT_STATE.FREE}) 
                                                                        
         print(" <= assignment failed", e)
     
