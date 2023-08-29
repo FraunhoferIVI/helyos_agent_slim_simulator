@@ -1,6 +1,8 @@
 [
     {
         "id": 1024,
+        "tool_type": "truck",
+        "reference_position": "first_axis",
         "axles": [
             {
                 "id": 0,
@@ -21,6 +23,7 @@
                 ]
             },
             {
+                "tool_type": "trailer",
                 "id": 1,
                 "position": {
                     "x": 6535,

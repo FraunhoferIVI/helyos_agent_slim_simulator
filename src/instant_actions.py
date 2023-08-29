@@ -107,7 +107,7 @@ def my_other_callback(position_sensor_ros, driving_operation_ros, vehi_state_ros
                 if not found_trailer:
                     raise Exception("Trailer not found as follower.")
                 
-                vehi_state_ros.publish({**states_ros, 'CONNECTED_TRAILER': {'uuid':trailer_uuid, 'status': AGENT_STATE.BUSY.value}})
+                vehi_state_ros.publish({**states_ros, 'CONNECTED_TRAILER': {'uuid':trailer_uuid, 'status': AGENT_STATE.BUSY.value, 'geometry': trailer['geometry']}})
                 sensor_patch = {  'instant_actions_response':{
                                 'trailer_control':{
                                         'title':"Trailer",

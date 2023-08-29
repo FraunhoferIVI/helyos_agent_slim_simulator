@@ -44,10 +44,10 @@ services:
             - PROTOCOL=AMQP # AMQP | MQTT (defaults to AMQP)
 
             # RBMQ ACCOUNT
-            - RBMQ_USERNAME=Bb3402-9fc5-fdgs-434b-b87e-f19c5435113
-            - RBMQ_PASSWORD=senha
+            # - RBMQ_USERNAME=Bb3402-9fc5-fdgs-434b-b87e-f19c5435113
+            # - RBMQ_PASSWORD=senha
             # OR
-            # - REGISTRATION_TOKEN=0000-0000-0000-0000-0000
+            - REGISTRATION_TOKEN=0000-0000-0000-0000-0000
 
         networks:
             - control-tower-net

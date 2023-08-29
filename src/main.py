@@ -165,6 +165,12 @@ publishing_topics =  (current_assignment_ros, vehi_state_ros, position_sensor_ro
 position_thread = Thread(target=periodic_publish_state_and_sensors,args=[new_helyOS_client_for_THREAD, *publishing_topics])
 position_thread.start()
 
+follower_agents = summary_rpc.call({'query':"allFollowers", 'conditions':{"uuid":UUID}})
+if len(follower_agents) > 0:
+    vehi_state_ros.publish({**vehi_state_ros.read(), 'CONNECTED_TRAILER': {'uuid':follower_agents[0]['uuid'],
+                                                                           'status': AGENT_STATE.BUSY.value, 
+                                                                           'geometry': follower_agents[0]['geometry']}})
+
 
 
 # 3- AGENT RECEIVES MESSAGES 
