@@ -166,11 +166,14 @@ position_thread = Thread(target=periodic_publish_state_and_sensors,args=[new_hel
 position_thread.start()
 
 follower_agents = summary_rpc.call({'query':"allFollowers", 'conditions':{"uuid":UUID}})
-if len(follower_agents) > 0:
-    vehi_state_ros.publish({**vehi_state_ros.read(), 'CONNECTED_TRAILER': {'uuid':follower_agents[0]['uuid'],
-                                                                           'status': AGENT_STATE.BUSY.value, 
-                                                                           'geometry': follower_agents[0]['geometry']}})
-
+try:
+    if len(follower_agents) > 0:
+        print(follower_agents)
+        vehi_state_ros.publish({**vehi_state_ros.read(), 'CONNECTED_TRAILER': {'uuid':follower_agents[0]['uuid'],
+                                                                            'status': AGENT_STATE.BUSY.value, 
+                                                                            'geometry': follower_agents[0]['geometry']}})
+except:
+    print("\n==> Interconnection not supported. Please update your helyOS core.\n")
 
 
 # 3- AGENT RECEIVES MESSAGES 
