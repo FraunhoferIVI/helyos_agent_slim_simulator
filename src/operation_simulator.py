@@ -2,6 +2,7 @@
 
 import time, math, random, os
 from helyos_agent_sdk.models import AGENT_STATE, ASSIGNMENT_STATUS
+from connect_trailer import trailer_connection
 from utils.path_followers import stanley_path_follower, straight_path_to_destination
 from utils.data_format_convertors import convert_autotruck_path_to_trajectory, get_destination_from_assignment
 
@@ -24,32 +25,35 @@ def path_tracking(pose0, target_trajectory):
 
 
 
-def assignment_execution_local_simulator(inst_assignment_msg, ASSIGNMENT_FORMAT,
-                                         current_assignment_ros, 
-                                         vehi_state_ros, position_sensor_ros, driving_operation_ros):
+def assignment_execution_local_simulator(inst_assignment_msg, ASSIGNMENT_FORMAT, helyOS_client2, summary_rpc, *mock_ros_topics):
     """ Assignment simulator wrapper """
-    
+
+    current_assignment_ros, vehi_state_ros, position_sensor_ros, driving_operation_ros = mock_ros_topics
     assignment_metadata = inst_assignment_msg.assignment_metadata
     assignment_body = inst_assignment_msg.body
+    operation = assignment_body.get('operation', "driving")
     pose0 = position_sensor_ros.read()
+
     
-    if ASSIGNMENT_FORMAT == "autotruck-path" or ASSIGNMENT_FORMAT == "trucktrix-path":
-        target_trajectory = convert_autotruck_path_to_trajectory(autotruck_path=assignment_body)    
+    if "connect_trailer" not in operation:
 
-    if ASSIGNMENT_FORMAT == "trajectory":
-        target_trajectory = assignment_body.get('trajectory', None)
+        if ASSIGNMENT_FORMAT == "autotruck-path" or ASSIGNMENT_FORMAT == "trucktrix-path":
+            target_trajectory = convert_autotruck_path_to_trajectory(autotruck_path=assignment_body)    
 
-    if ASSIGNMENT_FORMAT == "destination":
-        #  It  drives a straight path to destination.
-        destination = get_destination_from_assignment(assignment_body)
-        target_trajectory = straight_path_to_destination(pose0, destination)
+        if ASSIGNMENT_FORMAT == "trajectory":
+            target_trajectory = assignment_body.get('trajectory', None)
 
-    if ASSIGNMENT_FORMAT == "fixed":
-        #  It ignores the path and destination and always drives a fixed path.
-        destination = pose0; destination['x'] = pose0['x'] + 10000 
-        trajectory = straight_path_to_destination(pose0, destination)
+        if ASSIGNMENT_FORMAT == "destination":
+            #  It  drives a straight path to destination.
+            destination = get_destination_from_assignment(assignment_body)
+            target_trajectory = straight_path_to_destination(pose0, destination)
 
-    trajectory = path_tracking(pose0, target_trajectory)
+        if ASSIGNMENT_FORMAT == "fixed":
+            #  It ignores the path and destination and always drives a fixed path.
+            destination = pose0; destination['x'] = pose0['x'] + 10000 
+            trajectory = straight_path_to_destination(pose0, destination)
+
+        trajectory = path_tracking(pose0, target_trajectory)
 
     try:
         current_assignment_ros.publish({'id':assignment_metadata.id, 'status':ASSIGNMENT_STATUS.EXECUTING})
@@ -57,7 +61,10 @@ def assignment_execution_local_simulator(inst_assignment_msg, ASSIGNMENT_FORMAT,
 
         print(" <= assignment is executing")
 
-        operation_finished = drive_ivi_stepped(driving_operation_ros, position_sensor_ros, trajectory)
+        if operation == 'driving':
+            operation_finished = drive_ivi_stepped(driving_operation_ros, position_sensor_ros, trajectory)
+        elif "connect_trailer" in operation:
+            operation_finished = trailer_connection(operation, vehi_state_ros, position_sensor_ros, helyOS_client2, summary_rpc)
 
         if operation_finished:
             

@@ -1,7 +1,7 @@
 import os, json, time
 from threading import Thread
 from data_publishing import periodic_publish_state_and_sensors
-from helyos_agent_sdk import HelyOSClient, HelyOSMQTTClient, AgentConnector,SummaryRPC, connect_rabbitmq
+from helyos_agent_sdk import HelyOSClient, HelyOSMQTTClient, AgentConnector,SummaryRPC
 from helyos_agent_sdk.models import AssignmentCurrentStatus, AGENT_STATE, AgentCurrentResources, ASSIGNMENT_STATUS
 from utils.MockROSCommunication import MockROSCommunication
 from instant_actions import cancel_assignm_callback, my_other_callback, release_callback, reserve_callback
@@ -150,7 +150,7 @@ position_sensor_ros.publish({ 'x':X0, 'y':Y0, 'orientations':initial_orientation
 # 2 - AGENT PUBLISHES MESSAGES
 # Use a separate thread to publish position, state and sensors periodically
 
-## 2.1 Instantiate second helyOS client 
+## 2.1 Instantiate second helyOS client to work in different thread.
 new_helyOS_client_for_THREAD = MessageBrokerClient(RABBITMQ_HOST, RABBITMQ_PORT, uuid=UUID, enable_ssl=ENABLE_SSL, ca_certificate=CA_CERTIFICATE)
 if RBMQ_USERNAME and RBMQ_PASSWORD:
     new_helyOS_client_for_THREAD.connect(RBMQ_USERNAME, RBMQ_PASSWORD) 
@@ -158,13 +158,14 @@ else:
     new_helyOS_client_for_THREAD.connect(helyOS_client.checkin_data['rbmq_username'], 
                                                  helyOS_client.rbmq_password)
     
-## 2.2 Instantiate RPC requester
-summary_rpc = SummaryRPC(new_helyOS_client_for_THREAD)
-
+## 2.2 Start thread to publish messages
 publishing_topics =  (current_assignment_ros, vehi_state_ros, position_sensor_ros)
 position_thread = Thread(target=periodic_publish_state_and_sensors,args=[new_helyOS_client_for_THREAD, *publishing_topics])
 position_thread.start()
 
+
+## 3 - Instantiate RPC requester
+summary_rpc = SummaryRPC(new_helyOS_client_for_THREAD)
 follower_agents = summary_rpc.call({'query':"allFollowers", 'conditions':{"uuid":UUID}})
 try:
     if len(follower_agents) > 0:
@@ -203,7 +204,7 @@ def my_assignment_callback(ch, sender, inst_assignment_msg):
     time.sleep(1)
 
     operation_topics = (current_assignment_ros, vehi_state_ros, position_sensor_ros, driving_operation_ros)
-    assignment_execution_thread = Thread(target=assignment_execution_local_simulator, args=(inst_assignment_msg, ASSIGNMENT_FORMAT, *operation_topics))
+    assignment_execution_thread = Thread(target=assignment_execution_local_simulator, args=(inst_assignment_msg, ASSIGNMENT_FORMAT, new_helyOS_client_for_THREAD, summary_rpc, *operation_topics))
     assignment_execution_thread.start()
 
 agentConnector.consume_assignment_messages(assignment_callback=my_assignment_callback)
