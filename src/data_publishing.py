@@ -27,23 +27,31 @@ def get_trailer_position(position_sensor_ros, truck_geometry):
         
     absolut_truck_angle = truck_sensors['orientations'][0]
     absolut_trailer_angle = absolut_truck_angle - trailer_joint_angle
-    # we use the position of the first axis  as the global x, y for the truck 
-    # and truck-trailer connection point as global x, y position for the trailer.
-    rear_position_from_chassi = truck_geometry['rear_joint_position']
-    first_axis_position_from_chassi = truck_geometry['axles'][0]['position']
-    rear_position_from_first_axis = {'x': rear_position_from_chassi['x'] - first_axis_position_from_chassi['x'], 
-                                     'y': rear_position_from_chassi['y'] - first_axis_position_from_chassi['y']}
+
+    truck_first_axle_position = truck_geometry['axles'][0]['position']
+    truck_rear_position = truck_geometry['rear_joint_position']
+    trailer_front_joint_position = {'x':0, 'y':0} # by definition.
   
-    truck_rear_joint_distance_to_reference = math.sqrt(rear_position_from_first_axis['x']**2 + rear_position_from_first_axis['y']**2)
-    trailer_front_joint_distance_to_reference = 0 # by definition
+    # We use the position of the first axle as the global x, y reference for the truck, 
+    # and truck-trailer joint point as global x, y reference for the trailer.
+    truck_global_reference = truck_first_axle_position
+    vector_from_reference_to_rear_position = { 'x': truck_rear_position['x'] - truck_global_reference['x'], 
+                                               'y': truck_rear_position['y'] - truck_global_reference['y']}
+    
+    truck_rear_joint_distance_to_truck_global_reference = math.sqrt(vector_from_reference_to_rear_position['x']**2 +
+                                                             vector_from_reference_to_rear_position['y']**2 )
+    
+
+    trailer_global_reference = trailer_front_joint_position
+    trailer_front_joint_distance_to_trailer_global_reference = 0 # by definition
 
 
     trailer = {'pose':{}}
-    trailer['pose']['x'] = truck_sensors['x'] - truck_rear_joint_distance_to_reference * math.cos(absolut_truck_angle/1000) 
-                                            #   - trailer_front_joint_distance_to_reference * math.cos(absolut_trailer_angle/1000) this is zero
+    trailer['pose']['x'] = truck_sensors['x'] - truck_rear_joint_distance_to_truck_global_reference * math.cos(absolut_truck_angle/1000) \
+                                              - trailer_front_joint_distance_to_trailer_global_reference * math.cos(absolut_trailer_angle/1000) 
     
-    trailer['pose']['y'] = truck_sensors['y'] - truck_rear_joint_distance_to_reference * math.sin(absolut_truck_angle/1000) 
-                                            #   - trailer_front_joint_distance_to_reference * math.sin(absolut_trailer_angle/1000) this is zero
+    trailer['pose']['y'] = truck_sensors['y'] - truck_rear_joint_distance_to_truck_global_reference * math.sin(absolut_truck_angle/1000) \
+                                              - trailer_front_joint_distance_to_trailer_global_reference * math.sin(absolut_trailer_angle/1000) 
     
     trailer['pose']['orientations'] = [absolut_trailer_angle]
     
@@ -71,11 +79,14 @@ def interprete_vehicle_state(vehicle_data, assignm_data, vehi_state_ros ):
 
 def periodic_publish_state_and_sensors(helyOS_client2, current_assignment_ros, vehi_state_ros, position_sensor_ros):
     agentConnector2 = AgentConnector(helyOS_client2)
-    period = 1 # second
-    z=0
+    period = 0.5 # second => 2 Hz
+    z=0; previous_status = None; previous_state = None
+    time.sleep(2)
+
     while True:
         time.sleep(period)
         
+        # Publish truck position
         try:
             agent_data = get_vehicle_position(position_sensor_ros)
             agentConnector2.publish_sensors(x=agent_data["x"], y=agent_data["y"], z=0,
@@ -83,8 +94,12 @@ def periodic_publish_state_and_sensors(helyOS_client2, current_assignment_ros, v
         except Exception as e:
             print("cannot read position.", e)
 
+        # Publish trailer position
+        try:
+            trailer = vehi_state_ros.read().get('CONNECTED_TRAILER', None)
+        except:
+            trailer = None
 
-        trailer = vehi_state_ros.read().get('CONNECTED_TRAILER', None)
         if trailer is not None:
             try:
                 truck_geometry = GEOMETRY[0]
@@ -99,14 +114,18 @@ def periodic_publish_state_and_sensors(helyOS_client2, current_assignment_ros, v
             except Exception as e:
                 print("cannot read trailer position.", e)
 
-        
+        # Publish agent and assignment statuses when they change.
         try:
             assignm_data = get_assignment_state(current_assignment_ros)
-            vehicle_data = interprete_vehicle_state(agent_data, assignm_data, vehi_state_ros)            
-
-            agentConnector2.publish_state(status=vehicle_data['agent_state'], 
-                                 assignment_status=AssignmentCurrentStatus(id=assignm_data['id'], 
-                                                                       status=assignm_data['status'],
+            vehicle_data = interprete_vehicle_state(agent_data, assignm_data, vehi_state_ros)     
+            assign_status_changed = assignm_data and (assignm_data['status'] != previous_status)
+            agent_state_changed = vehicle_data and (vehicle_data['agent_state'] != previous_state)
+            if assign_status_changed or agent_state_changed:
+                previous_status =  assignm_data['status']   
+                previous_state =  vehicle_data['agent_state']   
+                agentConnector2.publish_state(status=vehicle_data['agent_state'], 
+                                    assignment_status=AssignmentCurrentStatus(id=assignm_data['id'], 
+                                                                        status=assignm_data['status'],
                                                                         result=assignm_data.get('result',{})))
         except Exception as e:
             print("cannot read states.", e)
