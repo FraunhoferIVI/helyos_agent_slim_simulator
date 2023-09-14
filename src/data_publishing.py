@@ -3,6 +3,8 @@ import time, json, math, os
 from helyos_agent_sdk import AgentConnector
 from helyos_agent_sdk.models import AssignmentCurrentStatus
 GEOMETRY_FILENAME = os.environ.get('GEOMETRY_FILENAME', "geometry.json")
+UPDATE_RATE = os.environ.get('UPDATE_RATE', 2)
+
 try:
     with open(GEOMETRY_FILENAME) as f:
         GEOMETRY =json.load(f)
@@ -79,7 +81,7 @@ def interprete_vehicle_state(vehicle_data, assignm_data, vehi_state_ros ):
 
 def periodic_publish_state_and_sensors(helyOS_client2, current_assignment_ros, vehi_state_ros, position_sensor_ros):
     agentConnector2 = AgentConnector(helyOS_client2)
-    period = 0.5 # second => 2 Hz
+    period = 1/UPDATE_RATE # second => default 2 Hz
     z=0; previous_status = None; previous_state = None
     time.sleep(2)
 

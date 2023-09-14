@@ -38,6 +38,7 @@ VEHICLE_PARTS =  int(os.environ.get('VEHICLE_PARTS', 1))
 CHECKIN_MAX_ATTEMPTS = int(os.environ.get('CHECKIN_MAX_ATTEMPTS', "5"))
 RBMQ_USERNAME = os.environ.get('RBMQ_USERNAME', None)
 RBMQ_PASSWORD = os.environ.get('RBMQ_PASSWORD', None)
+UPDATE_RATE = os.environ.get('UPDATE_RATE', 2)
 
 if UUID == "RANDOM_UUID":
     UUID = str(uuid.uuid1())
