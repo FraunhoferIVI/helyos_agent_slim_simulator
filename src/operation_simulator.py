@@ -29,13 +29,17 @@ def assignment_execution_local_simulator(inst_assignment_msg, ASSIGNMENT_FORMAT,
     """ Assignment simulator wrapper """
 
     current_assignment_ros, vehi_state_ros, position_sensor_ros, driving_operation_ros = mock_ros_topics
-    assignment_metadata = inst_assignment_msg.assignment_metadata
+    assignment_metadata = inst_assignment_msg.metadata
     assignment_body = inst_assignment_msg.body
-    operation = assignment_body.get('operation', "driving")
     pose0 = position_sensor_ros.read()
 
+    if 'operation' in assignment_body:
+        operation = assignment_body['operation']
+    else:
+        ASSIGNMENT_FORMAT = "autotruck-path" 
+        operation = 'driving'
     
-    if "connect_trailer" not in operation:
+    if "driving" in operation:
 
         if ASSIGNMENT_FORMAT == "autotruck-path" or ASSIGNMENT_FORMAT == "trucktrix-path":
             target_trajectory = convert_autotruck_path_to_trajectory(autotruck_path=assignment_body)    

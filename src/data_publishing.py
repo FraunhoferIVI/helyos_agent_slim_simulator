@@ -116,7 +116,7 @@ def periodic_publish_state_and_sensors(helyOS_client2, current_assignment_ros, v
             except Exception as e:
                 print("cannot read trailer position.", e)
 
-        # Publish agent and assignment statuses when they change.
+        # Publish agent and assignment statuses if they changed.
         try:
             assignm_data = get_assignment_state(current_assignment_ros)
             vehicle_data = interprete_vehicle_state(agent_data, assignm_data, vehi_state_ros)     

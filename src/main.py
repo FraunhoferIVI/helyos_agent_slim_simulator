@@ -197,7 +197,7 @@ agentConnector.consume_instant_action_messages(my_reserve_callback, my_release_c
 def my_assignment_callback(ch, sender, inst_assignment_msg): 
     print(" => assignment is received")
 
-    assignment_metadata = inst_assignment_msg.assignment_metadata
+    assignment_metadata = inst_assignment_msg.metadata
     current_assignment_ros.publish({'id':assignment_metadata.id, 'status':ASSIGNMENT_STATUS.ACTIVE})
     vehi_state_ros.publish({**vehi_state_ros.read(),'agent_state': AGENT_STATE.BUSY}) 
 
