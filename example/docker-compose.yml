@@ -24,7 +24,7 @@ services:
             - ASSIGNMENT_FORMAT=autotruck-path  # fixed | trajectory | destination | autotruck-path 
             - NAME='MY TRUCK'
             - X0=0
-            - Y0=-50000
+            - Y0=-40000
             - ORIENTATION=0
             - VELOCITY=1.8 
             - VEHICLE_PARTS=2

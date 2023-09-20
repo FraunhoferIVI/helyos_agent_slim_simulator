@@ -92,7 +92,7 @@ def periodic_publish_state_and_sensors(helyOS_client2, current_assignment_ros, v
         try:
             agent_data = get_vehicle_position(position_sensor_ros)
             agentConnector2.publish_sensors(x=agent_data["x"], y=agent_data["y"], z=0,
-                                            orientations=agent_data['orientations'], sensors=agent_data['sensors'])
+                                            orientations=agent_data['orientations'], sensors=agent_data['sensors'], signed=False)
         except Exception as e:
             print("cannot read position.", e)
 
@@ -123,11 +123,17 @@ def periodic_publish_state_and_sensors(helyOS_client2, current_assignment_ros, v
             assign_status_changed = assignm_data and (assignm_data['status'] != previous_status)
             agent_state_changed = vehicle_data and (vehicle_data['agent_state'] != previous_state)
             if assign_status_changed or agent_state_changed:
+                agentConnector2.publish_state(status=vehicle_data['agent_state'], 
+                                    assignment_status=AssignmentCurrentStatus(  id=assignm_data['id'], 
+                                                                                status=assignm_data['status'],
+                                                                                result=assignm_data.get('result',{})),
+                                    signed=True)
+                # Aditionally save the current position to the database with the minimum of latency.
+                agentConnector2.publish_general_updates({'x':agent_data["x"], 'y':agent_data["y"], 'orientations': agent_data['orientations']}, signed=True)
+
                 previous_status =  assignm_data['status']   
                 previous_state =  vehicle_data['agent_state']   
-                agentConnector2.publish_state(status=vehicle_data['agent_state'], 
-                                    assignment_status=AssignmentCurrentStatus(id=assignm_data['id'], 
-                                                                        status=assignm_data['status'],
-                                                                        result=assignm_data.get('result',{})))
+
+
         except Exception as e:
             print("cannot read states.", e)

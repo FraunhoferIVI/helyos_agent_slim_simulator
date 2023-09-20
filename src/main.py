@@ -147,12 +147,15 @@ position_sensor_ros.publish({ 'x':X0, 'y':Y0, 'orientations':initial_orientation
 
 
 
-
 # 2 - AGENT PUBLISHES MESSAGES
 # Use a separate thread to publish position, state and sensors periodically
 
 ## 2.1 Instantiate second helyOS client to work in different thread.
-new_helyOS_client_for_THREAD = MessageBrokerClient(RABBITMQ_HOST, RABBITMQ_PORT, uuid=UUID, enable_ssl=ENABLE_SSL, ca_certificate=CA_CERTIFICATE)
+privkey = helyOS_client.private_key
+pubkey = helyOS_client.public_key
+
+new_helyOS_client_for_THREAD = MessageBrokerClient(RABBITMQ_HOST, RABBITMQ_PORT, uuid=UUID, enable_ssl=ENABLE_SSL, ca_certificate=CA_CERTIFICATE,
+                                                   privkey=privkey, pubkey=pubkey)
 if RBMQ_USERNAME and RBMQ_PASSWORD:
     new_helyOS_client_for_THREAD.connect(RBMQ_USERNAME, RBMQ_PASSWORD) 
 else:
@@ -194,7 +197,7 @@ agentConnector.consume_instant_action_messages(my_reserve_callback, my_release_c
 
 # Register the assignment callback 
 
-def my_assignment_callback(ch, sender, inst_assignment_msg): 
+def my_assignment_callback(ch, sender, inst_assignment_msg, signature): 
     print(" => assignment is received")
 
     assignment_metadata = inst_assignment_msg.metadata
