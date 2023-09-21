@@ -39,15 +39,15 @@ services:
             # - PROTOCOL=MQTT # AMQP | MQTT (defaults to AMQP)
             
             # FOR AMQP AGENT (DEFAULT)
-            - RBMQ_PORT=5671
+            - RBMQ_PORT=8883  # 5671 | 5672 | 8883 (defaults to 5672)
             - ENABLE_SSL=True # True | False (defaults to False)
-            - PROTOCOL=AMQP # AMQP | MQTT (defaults to AMQP)
+            - PROTOCOL=MQTT # AMQP | MQTT (defaults to AMQP) Remember to change the port for MQTT
 
             # RBMQ ACCOUNT
-            # - RBMQ_USERNAME=Bb3402-9fc5-fdgs-434b-b87e-f19c5435113
-            # - RBMQ_PASSWORD=senha
+            - RBMQ_USERNAME=Bb3402-9fc5-fdgs-434b-b87e-f19c5435113
+            - RBMQ_PASSWORD=pass123
             # OR
-            - REGISTRATION_TOKEN=0000-0000-0000-0000-0000
+            # - REGISTRATION_TOKEN=0000-0000-0000-0000-0000
 
         networks:
             - control-tower-net

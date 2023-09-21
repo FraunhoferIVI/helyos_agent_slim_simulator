@@ -4,7 +4,7 @@ import json
 from helyos_agent_sdk.models import AssignmentCurrentStatus, AGENT_STATE, AgentCurrentResources, ASSIGNMENT_STATUS
 from connect_trailer import trailer_connection
 
-def reserve_callback( vehi_state_ros, agentConnector, ch, sender, req_resources, signature):
+def reserve_callback( vehi_state_ros, agentConnector, ch, sender, req_resources, msg_str, signature):
     print("=> reserve agent", req_resources)
 
     resources = AgentCurrentResources(operation_types_available = req_resources.operation_types_required,
@@ -16,7 +16,7 @@ def reserve_callback( vehi_state_ros, agentConnector, ch, sender, req_resources,
     print("<= agent reserved", resources)
     
     
-def release_callback(vehi_state_ros, agentConnector, ch, sender, req_resources, signature):
+def release_callback(vehi_state_ros, agentConnector, ch, sender, req_resources, msg_str, signature):
     print(" => release agent", req_resources)
     
     resources = AgentCurrentResources(operation_types_available = req_resources.operation_types_required,
@@ -35,7 +35,7 @@ def do_something_to_interrupt_assignment_operations(driving_operation_ros):
     driving_operation_ros.publish({**operation_commands, 'CANCEL_DRIVING': True, 'PAUSE_ASSIGNMENT': False})
 
 
-def cancel_assignm_callback(driving_operation_ros, current_assignment_ros, agentConnector, ch, server, inst_assignm_cancel, signature):
+def cancel_assignm_callback(driving_operation_ros, current_assignment_ros, agentConnector, ch, server, inst_assignm_cancel, msg_str, signature):
     assignment_metadata = inst_assignm_cancel.assignment_metadata   
     assignm_data = current_assignment_ros.read()
     agentConnector.current_assignment = AssignmentCurrentStatus(id=assignm_data['id'], status=assignm_data['status'], result=assignm_data.get('result',{}))

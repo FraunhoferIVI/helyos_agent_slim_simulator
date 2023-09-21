@@ -8,6 +8,8 @@ from instant_actions import cancel_assignm_callback, my_other_callback, release_
 from operation_simulator import assignment_execution_local_simulator
 import uuid
 from helyos_agent_sdk import SummaryRPC
+from helyos_agent_sdk.crypto import verify_signature
+from helyos_agent_sdk.utils import replicate_helyos_client
 
 
 # CONSTANTS
@@ -154,8 +156,7 @@ position_sensor_ros.publish({ 'x':X0, 'y':Y0, 'orientations':initial_orientation
 privkey = helyOS_client.private_key
 pubkey = helyOS_client.public_key
 
-new_helyOS_client_for_THREAD = MessageBrokerClient(RABBITMQ_HOST, RABBITMQ_PORT, uuid=UUID, enable_ssl=ENABLE_SSL, ca_certificate=CA_CERTIFICATE,
-                                                   privkey=privkey, pubkey=pubkey)
+new_helyOS_client_for_THREAD = replicate_helyos_client(helyOS_client)
 if RBMQ_USERNAME and RBMQ_PASSWORD:
     new_helyOS_client_for_THREAD.connect(RBMQ_USERNAME, RBMQ_PASSWORD) 
 else:
@@ -168,18 +169,21 @@ position_thread = Thread(target=periodic_publish_state_and_sensors,args=[new_hel
 position_thread.start()
 
 
-## 3 - Instantiate RPC requester
-summary_rpc = SummaryRPC(new_helyOS_client_for_THREAD)
-follower_agents = summary_rpc.call({'query':"allFollowers", 'conditions':{"uuid":UUID}})
-try:
-    if len(follower_agents) > 0:
-        print(follower_agents)
-        vehi_state_ros.publish({**vehi_state_ros.read(), 'CONNECTED_TRAILER': {'uuid':follower_agents[0]['uuid'],
-                                                                            'status': AGENT_STATE.BUSY.value, 
-                                                                            'geometry': follower_agents[0]['geometry']}})
-except:
-    print("\n==> Interconnection not supported. Please update your helyOS core.\n")
-
+## 3 - Instantiate RPC requester. RPC is only supported by AMQP protocol.
+if PROTOCOL == "AMQP":
+    summary_rpc = SummaryRPC(new_helyOS_client_for_THREAD)
+    follower_agents = summary_rpc.call({'query':"allFollowers", 'conditions':{"uuid":UUID}})
+    try:
+        if len(follower_agents) > 0:
+            print(follower_agents)
+            vehi_state_ros.publish({**vehi_state_ros.read(), 'CONNECTED_TRAILER': {'uuid':follower_agents[0]['uuid'],
+                                                                                'status': AGENT_STATE.BUSY.value, 
+                                                                                'geometry': follower_agents[0]['geometry']}})
+    except:
+        print("\n==> Interconnection not supported. Please update your helyOS core.\n")
+else:
+    summary_rpc = None
+    
 
 # 3- AGENT RECEIVES MESSAGES 
 
@@ -197,8 +201,15 @@ agentConnector.consume_instant_action_messages(my_reserve_callback, my_release_c
 
 # Register the assignment callback 
 
-def my_assignment_callback(ch, sender, inst_assignment_msg, signature): 
+def my_assignment_callback(ch, sender, inst_assignment_msg, msg_str, signature): 
     print(" => assignment is received")
+
+    try:
+        verify_signature(msg_str, signature, helyOS_client.helyos_public_key)
+    except Exception as e:
+        print(e)
+        print("Signature verification failed")
+        return
 
     assignment_metadata = inst_assignment_msg.metadata
     current_assignment_ros.publish({'id':assignment_metadata.id, 'status':ASSIGNMENT_STATUS.ACTIVE})

@@ -36,17 +36,20 @@ def trailer_connection(command_body,vehi_state_ros, position_sensor_ros, helyOS_
             agentConnector.publish_general_updates({'followers':[trailer_uuid]})
 
             # # Confirm if the interconnection has worked
-            found_trailer = False; i = 0
-            while not found_trailer and i < 3 :
-                time.sleep(1)
-                follower_agents = summary_rpc.call({'query':"allFollowers", 'conditions':{"uuid":leader_uuid}})
-                for trailer in follower_agents: found_trailer = found_trailer or trailer['uuid'] == trailer_uuid
-                print("trailer data", follower_agents)
-                i = i + 1
+            if summary_rpc:
+                found_trailer = False; i = 0
+                while not found_trailer and i < 3 :
+                        time.sleep(1)
+                        follower_agents = summary_rpc.call({'query':"allFollowers", 'conditions':{"uuid":leader_uuid}})
+                        for trailer in follower_agents: found_trailer = found_trailer or trailer['uuid'] == trailer_uuid
+                        print("trailer data", follower_agents)
+                        i = i + 1
 
-            if not found_trailer:
-                raise Exception("Trailer not found as follower.")
-            
+                if not found_trailer:
+                        raise Exception("Trailer not found as follower.")
+            else:
+                time.sleep(3)
+                
             vehi_state_ros.publish({**states_ros, 'CONNECTED_TRAILER': {'uuid':trailer_uuid, 'status': AGENT_STATE.BUSY.value, 'geometry': trailer['geometry']}})
             sensor_patch = {  'instant_actions_response':{
                             'trailer_control':{
