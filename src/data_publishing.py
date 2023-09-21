@@ -3,7 +3,7 @@ import time, json, math, os
 from helyos_agent_sdk import AgentConnector
 from helyos_agent_sdk.models import AssignmentCurrentStatus
 GEOMETRY_FILENAME = os.environ.get('GEOMETRY_FILENAME', "geometry.json")
-UPDATE_RATE = os.environ.get('UPDATE_RATE', 2)
+UPDATE_RATE = int(os.environ.get('UPDATE_RATE', '2'))
 
 try:
     with open(GEOMETRY_FILENAME) as f:
