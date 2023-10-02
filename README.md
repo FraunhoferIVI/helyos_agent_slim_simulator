@@ -54,6 +54,7 @@ The simulator is configured by the environment variables:
 | REGISTRATION_TOKEN | Allow agent to check in even if not registered in helyOS |
 | NAME | Agent name |
 | YARD_UID | Yard identifier |
+| UPDATE_RATE | Frequency of published messages (Hz) |
 | --- | --- |
 | PATH_TRACKER |  ideal (arb. unit), stanley (mm), straight_to_destination(arb.unit)|
 | ASSIGNMENT_FORMAT | fixed, trajectory, destination, trucktrix-path |

@@ -25,7 +25,7 @@ def path_tracking(pose0, target_trajectory):
 
 
 
-def assignment_execution_local_simulator(inst_assignment_msg, ASSIGNMENT_FORMAT, helyOS_client2, summary_rpc, *mock_ros_topics):
+def assignment_execution_local_simulator(inst_assignment_msg, ASSIGNMENT_FORMAT, helyOS_client2, datareq_rpc, *mock_ros_topics):
     """ Assignment simulator wrapper """
 
     current_assignment_ros, vehi_state_ros, position_sensor_ros, driving_operation_ros = mock_ros_topics
@@ -68,7 +68,7 @@ def assignment_execution_local_simulator(inst_assignment_msg, ASSIGNMENT_FORMAT,
         if operation == 'driving':
             operation_finished = drive_ivi_stepped(driving_operation_ros, position_sensor_ros, trajectory)
         elif "connect_trailer" in operation:
-            operation_finished = trailer_connection(operation, vehi_state_ros, position_sensor_ros, helyOS_client2, summary_rpc)
+            operation_finished = trailer_connection(operation, vehi_state_ros, position_sensor_ros, helyOS_client2, datareq_rpc)
 
         if operation_finished:
             

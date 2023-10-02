@@ -2,4 +2,4 @@ vincenty
 dataclasses
 dataclasses_json
 numpy
-helyos_agent_sdk==0.6.0-beta1
+helyos_agent_sdk==0.6.0

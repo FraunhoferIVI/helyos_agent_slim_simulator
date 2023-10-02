@@ -50,7 +50,7 @@ def cancel_assignm_callback(driving_operation_ros, current_assignment_ros, agent
 
 
 
-def my_other_callback(position_sensor_ros, driving_operation_ros, vehi_state_ros, agentConnector, summary_rpc, ch, sender, received_str):
+def my_other_callback(position_sensor_ros, driving_operation_ros, vehi_state_ros, agentConnector, datareq_rpc, ch, sender, received_str):
     print("not helyos-related instant action", received_str)
     agent_data = position_sensor_ros.read()    
     operation_commands = driving_operation_ros.read()
@@ -67,7 +67,7 @@ def my_other_callback(position_sensor_ros, driving_operation_ros, vehi_state_ros
 
     try:
         if "connect_trailer" in command['body']:
-            return trailer_connection(command['body'], vehi_state_ros,position_sensor_ros, agentConnector.helyos_client, summary_rpc)
+            return trailer_connection(command['body'], vehi_state_ros,position_sensor_ros, agentConnector.helyos_client, datareq_rpc)
 
         if "pause" == command['body']:     
             driving_operation_ros.publish({**operation_commands, 'PAUSE_ASSIGNMENT': True})

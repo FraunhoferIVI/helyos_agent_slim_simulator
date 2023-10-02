@@ -10,7 +10,7 @@ services:
 
 
     agent_simulator:
-        # image: helyosframework/helyos_agent_slim_simulator:0.3.0
+        # image: helyosframework/helyos_agent_slim_simulator:0.6.0
         build: ../
 
         volumes:
@@ -22,13 +22,14 @@ services:
             - UUID=Bb3402-9fc5-fdgs-434b-b87e-f19c5435113 
             - PATH_TRACKER=ideal  # ideal | straight_to_destination | stanley (defaults to ideal)
             - ASSIGNMENT_FORMAT=autotruck-path  # fixed | trajectory | destination | autotruck-path 
-            - NAME='MY TRUCK'
+            - NAME='TSLIM-SIM'
             - X0=0
             - Y0=-40000
             - ORIENTATION=0
             - VELOCITY=1.8 
             - VEHICLE_PARTS=2
             - YARD_UID=1
+            - UPDATE_RATE=20 #Hz
 
             # RABBITMQ 
             - RBMQ_HOST=local_message_broker # local_message_broker | rabbitmq.server.com 
@@ -39,15 +40,15 @@ services:
             # - PROTOCOL=MQTT # AMQP | MQTT (defaults to AMQP)
             
             # FOR AMQP AGENT (DEFAULT)
-            - RBMQ_PORT=8883  # 5671 | 5672 | 8883 (defaults to 5672)
-            - ENABLE_SSL=True # True | False (defaults to False)
-            - PROTOCOL=MQTT # AMQP | MQTT (defaults to AMQP) Remember to change the port for MQTT
+            - RBMQ_PORT=5672  # 5671 | 5672 | 8883 (defaults to 5672)
+            - ENABLE_SSL=False # True | False (defaults to False)
+            - PROTOCOL=AMQP # AMQP | MQTT (defaults to AMQP) Remember to change the port for MQTT
 
             # RBMQ ACCOUNT
-            - RBMQ_USERNAME=Bb3402-9fc5-fdgs-434b-b87e-f19c5435113
-            - RBMQ_PASSWORD=pass123
+            # - RBMQ_USERNAME=Bb3402-9fc5-fdgs-434b-b87e-f19c5435113
+            # - RBMQ_PASSWORD=pass123
             # OR
-            # - REGISTRATION_TOKEN=0000-0000-0000-0000-0000
+            - REGISTRATION_TOKEN=0001-0002-0003-0000-0004
 
         networks:
             - control-tower-net
@@ -57,7 +58,7 @@ services:
 
 networks:
     control-tower-net:
-        name: api-network
+        name: control-tower-net
         external: true
 
 

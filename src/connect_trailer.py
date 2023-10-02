@@ -4,7 +4,7 @@ from helyos_agent_sdk import AgentConnector
 
 
 
-def trailer_connection(command_body,vehi_state_ros, position_sensor_ros, helyOS_client2, summary_rpc):
+def trailer_connection(command_body,vehi_state_ros, position_sensor_ros, helyOS_client2, datareq_rpc):
     states_ros = vehi_state_ros.read()
     agentConnector = AgentConnector(helyOS_client2)
 
@@ -36,11 +36,11 @@ def trailer_connection(command_body,vehi_state_ros, position_sensor_ros, helyOS_
             agentConnector.publish_general_updates({'followers':[trailer_uuid]})
 
             # # Confirm if the interconnection has worked
-            if summary_rpc:
+            if datareq_rpc:
                 found_trailer = False; i = 0
                 while not found_trailer and i < 3 :
                         time.sleep(1)
-                        follower_agents = summary_rpc.call({'query':"allFollowers", 'conditions':{"uuid":leader_uuid}})
+                        follower_agents = datareq_rpc.call({'query':"allFollowers", 'conditions':{"uuid":leader_uuid}})
                         for trailer in follower_agents: found_trailer = found_trailer or trailer['uuid'] == trailer_uuid
                         print("trailer data", follower_agents)
                         i = i + 1

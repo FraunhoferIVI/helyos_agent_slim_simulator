@@ -88,6 +88,8 @@ def periodic_publish_state_and_sensors(helyOS_client2, current_assignment_ros, v
     while True:
         time.sleep(period)
         
+        # SENSORS AND  POSITIONS - VISUALIZATION CHANNEL - HIGH FREQUENCY
+
         # Publish truck position
         try:
             agent_data = get_vehicle_position(position_sensor_ros)
@@ -109,27 +111,42 @@ def periodic_publish_state_and_sensors(helyOS_client2, current_assignment_ros, v
                 body = trailer_data
                 message= json.dumps({'type': 'agent_sensors','body': body})
                 helyOS_client2.publish(routing_key=f"agent.{trailer['uuid']}.visualization", message=message)
-                message= json.dumps({'type': 'agent_state','body': {'status':trailer['status']}})
-                helyOS_client2.publish(routing_key=f"agent.{trailer['uuid']}.state", message=message)
 
                 
             except Exception as e:
                 print("cannot read trailer position.", e)
 
-        # Publish agent and assignment statuses if they changed.
+
+        # ASSIGNMENT AND AGENT STATE - STATE AND UPDATE CHANNEL - LOW FREQUENCY  
         try:
             assignm_data = get_assignment_state(current_assignment_ros)
             vehicle_data = interprete_vehicle_state(agent_data, assignm_data, vehi_state_ros)     
             assign_status_changed = assignm_data and (assignm_data['status'] != previous_status)
             agent_state_changed = vehicle_data and (vehicle_data['agent_state'] != previous_state)
-            if assign_status_changed or agent_state_changed:
+            did_any_status_change = assign_status_changed or agent_state_changed
+
+            if did_any_status_change:
+                 # Publish agent and assignment statuses if they changed.
                 agentConnector2.publish_state(status=vehicle_data['agent_state'], 
                                     assignment_status=AssignmentCurrentStatus(  id=assignm_data['id'], 
                                                                                 status=assignm_data['status'],
                                                                                 result=assignm_data.get('result',{})),
-                                    signed=True)
+                                                                                signed=True)
+             
                 # Aditionally save the current position to the database with the minimum of latency.
                 agentConnector2.publish_general_updates({'x':agent_data["x"], 'y':agent_data["y"], 'orientations': agent_data['orientations']}, signed=True)
+
+
+                if trailer is not None:
+                    try:
+                        truck_geometry = GEOMETRY[0]
+                        trailer_data = get_trailer_position(position_sensor_ros, truck_geometry)
+                        body = trailer_data
+                        message= json.dumps({'type': 'agent_state','body': {'status':trailer['status']}})
+                        helyOS_client2.publish(routing_key=f"agent.{trailer['uuid']}.state", message=message)
+                    except Exception as e:
+                        print("cannot read trailer state.", e)
+                        
 
                 previous_status =  assignm_data['status']   
                 previous_state =  vehicle_data['agent_state']   

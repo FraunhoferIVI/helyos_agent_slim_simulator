@@ -1,13 +1,12 @@
 import os, json, time
 from threading import Thread
 from data_publishing import periodic_publish_state_and_sensors
-from helyos_agent_sdk import HelyOSClient, HelyOSMQTTClient, AgentConnector,SummaryRPC
+from helyos_agent_sdk import HelyOSClient, HelyOSMQTTClient, AgentConnector, DatabaseConnector
 from helyos_agent_sdk.models import AssignmentCurrentStatus, AGENT_STATE, AgentCurrentResources, ASSIGNMENT_STATUS
 from utils.MockROSCommunication import MockROSCommunication
 from instant_actions import cancel_assignm_callback, my_other_callback, release_callback, reserve_callback
 from operation_simulator import assignment_execution_local_simulator
 import uuid
-from helyos_agent_sdk import SummaryRPC
 from helyos_agent_sdk.crypto import verify_signature
 from helyos_agent_sdk.utils import replicate_helyos_client
 
@@ -171,8 +170,8 @@ position_thread.start()
 
 ## 3 - Instantiate RPC requester. RPC is only supported by AMQP protocol.
 if PROTOCOL == "AMQP":
-    summary_rpc = SummaryRPC(new_helyOS_client_for_THREAD)
-    follower_agents = summary_rpc.call({'query':"allFollowers", 'conditions':{"uuid":UUID}})
+    datareq_rpc = DatabaseConnector(new_helyOS_client_for_THREAD)
+    follower_agents = datareq_rpc.call({'query':"allFollowers", 'conditions':{"uuid":UUID}})
     try:
         if len(follower_agents) > 0:
             print(follower_agents)
@@ -182,7 +181,7 @@ if PROTOCOL == "AMQP":
     except:
         print("\n==> Interconnection not supported. Please update your helyOS core.\n")
 else:
-    summary_rpc = None
+    datareq_rpc = None
     
 
 # 3- AGENT RECEIVES MESSAGES 
@@ -193,7 +192,7 @@ def my_reserve_callback(*args):        return reserve_callback(vehi_state_ros, a
 def my_release_callback(*args):        return release_callback(vehi_state_ros, agentConnector, *args )
 def my_cancel_assignm_callback(*args): return cancel_assignm_callback(driving_operation_ros, current_assignment_ros, agentConnector, *args )
 def my_any_other_instant_action_callback(*args): return my_other_callback(position_sensor_ros,driving_operation_ros,vehi_state_ros, agentConnector,
-                                                                          summary_rpc, *args)
+                                                                          datareq_rpc, *args)
 
 agentConnector.consume_instant_action_messages(my_reserve_callback, my_release_callback, my_cancel_assignm_callback, my_any_other_instant_action_callback)
 
@@ -219,7 +218,7 @@ def my_assignment_callback(ch, sender, inst_assignment_msg, msg_str, signature):
     time.sleep(1)
 
     operation_topics = (current_assignment_ros, vehi_state_ros, position_sensor_ros, driving_operation_ros)
-    assignment_execution_thread = Thread(target=assignment_execution_local_simulator, args=(inst_assignment_msg, ASSIGNMENT_FORMAT, new_helyOS_client_for_THREAD, summary_rpc, *operation_topics))
+    assignment_execution_thread = Thread(target=assignment_execution_local_simulator, args=(inst_assignment_msg, ASSIGNMENT_FORMAT, new_helyOS_client_for_THREAD, datareq_rpc, *operation_topics))
     assignment_execution_thread.start()
 
 agentConnector.consume_assignment_messages(assignment_callback=my_assignment_callback)

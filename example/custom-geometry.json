@@ -2,7 +2,7 @@
     {
         "id": 1,
         "tool_type": "tractor",
-        "reference_position": "first_axis",
+        "reference_point": "first_axle_center",
         "axles": [
             {
                 "id": 0,
