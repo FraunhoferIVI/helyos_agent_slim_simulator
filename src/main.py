@@ -159,7 +159,7 @@ new_helyOS_client_for_THREAD = replicate_helyos_client(helyOS_client)
 if RBMQ_USERNAME and RBMQ_PASSWORD:
     new_helyOS_client_for_THREAD.connect(RBMQ_USERNAME, RBMQ_PASSWORD) 
 else:
-    new_helyOS_client_for_THREAD.connect(helyOS_client.checkin_data['rbmq_username'], 
+    new_helyOS_client_for_THREAD.connect(helyOS_client.checkin_data.body['rbmq_username'], 
                                                  helyOS_client.rbmq_password)
     
 ## 2.2 Start thread to publish messages
@@ -169,8 +169,15 @@ position_thread.start()
 
 
 ## 3 - Instantiate RPC requester. RPC is only supported by AMQP protocol.
+new_helyOS_client_for_THREAD2 = replicate_helyos_client(helyOS_client)
+if RBMQ_USERNAME and RBMQ_PASSWORD:
+    new_helyOS_client_for_THREAD2.connect(RBMQ_USERNAME, RBMQ_PASSWORD) 
+else:
+    new_helyOS_client_for_THREAD2.connect(helyOS_client.checkin_data.body['rbmq_username'], 
+                                                 helyOS_client.rbmq_password)
+
 if PROTOCOL == "AMQP":
-    datareq_rpc = DatabaseConnector(new_helyOS_client_for_THREAD)
+    datareq_rpc = DatabaseConnector(new_helyOS_client_for_THREAD2)
     follower_agents = datareq_rpc.call({'query':"allFollowers", 'conditions':{"uuid":UUID}})
     try:
         if len(follower_agents) > 0:
