@@ -36,7 +36,7 @@ def do_something_to_interrupt_assignment_operations(driving_operation_ros):
 
 
 def cancel_assignm_callback(driving_operation_ros, current_assignment_ros, agentConnector, ch, server, inst_assignm_cancel, msg_str, signature):
-    assignment_metadata = inst_assignm_cancel.assignment_metadata   
+    assignment_metadata = inst_assignm_cancel.metadata   
     assignm_data = current_assignment_ros.read()
     agentConnector.current_assignment = AssignmentCurrentStatus(id=assignm_data['id'], status=assignm_data['status'], result=assignm_data.get('result',{}))
 
