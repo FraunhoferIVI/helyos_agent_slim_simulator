@@ -71,6 +71,7 @@ initial_orientations[0] = ORIENTATION_0
 agent_data = {          
                 'name': VEHICLE_NAME,
                 'tool_type': TOOL_TYPE,
+                'agentClass': 'vehicle',
                 'pose': {'x': X0, 'y':Y0, 'orientations':initial_orientations},
                 'geometry': GEOMETRY,
                 'factsheet': GEOMETRY,
