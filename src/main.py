@@ -75,7 +75,7 @@ agent_data = {
                 'pose': {'x': X0, 'y':Y0, 'orientations':initial_orientations},
                 'geometry': GEOMETRY,
                 'factsheet': GEOMETRY,
-                'data_format': GEOMETRY_FORMAT
+                'data_format': ASSIGNMENT_FORMAT,
          }
 
 
